@@ -2,7 +2,9 @@
 title: "BART comp model data prep"
 author: "Laura Hirello"
 date: "2025-07-10"
-output: html_document
+output: 
+  html_document: 
+    keep_md: true
 ---
 
 ```{r setup, include=FALSE}
