@@ -8,9 +8,29 @@ output:
 ---
 
 ```{r, eval=TRUE}
+#Data cleaning
+library(dplyr) 
+library(data.table)
 library("readxl")
-folder_path <- "//ad.monash.edu/shared/MNHS-SPP/Circadia/Researcher Folders/Current/Hirello/03 Data Analysis/Inquisit"
-file_list <- list.files(path = folder_path, pattern = "-|\\.xlsx", full.names = TRUE)
-2+2
+library(tidyverse)
+library(foreach)
+library(readr)
+library("writexl")
+library(tibble)
+
+#visualization
+library(ggplot2)
+library(ggpubr)
+library(visreg)
+
+#modelling
+library(lme4)
+library(lmerTest)
+
+#read data
+bart_dt <- as.data.table(read_excel("bart_df.xlsx"))
+bart_dt[, c("date", "time", "blockcode", "trialnum", "pumpresult", "pumpcount", "timebefore1stpump", "rotation", "d_n", "totalearningsBART") := NULL] #remove extra columns
+bart_dt$trial_ID <- paste0(bart_dt$participant, bart_dt$shift, bart_dt$activity, collapse = NULL, recycle0 = FALSE) #add in unique trial identifier
+setcolorder(bart_dt, c("trial_ID", "participant", "shift", "activity", "ballooncount", "wantedpumps", "explosionpoint", "explosion")) #reorder columns
 
 ```
