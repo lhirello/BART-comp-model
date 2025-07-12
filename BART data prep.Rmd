@@ -37,6 +37,6 @@ bart_df <- bart_df %>%
   relocate(subjID, .before = participant) %>% #move subjID to the front (personal preference)
   rename(pumps = wantedpumps) #rename column as needed to match model files
 
-write_tsv(bart_df, "bart_df.tsv")
+write_tsv(bart_df, "df.tsv")
 
 ```
