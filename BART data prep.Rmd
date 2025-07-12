@@ -28,12 +28,15 @@ library(lme4)
 library(lmerTest)
 
 #read data
-bart_dt <- as.data.table(read_excel("bart_df.xlsx"))
-bart_dt[, c("date", "time", "blockcode", "trialnum", "pumpresult", "pumpcount", "timebefore1stpump", "rotation", "d_n", "totalearningsBART", "explosionpoint") := NULL] #remove extra columns
-bart_dt$trial_ID <- paste0(bart_dt$participant, bart_dt$shift, bart_dt$activity, collapse = NULL, recycle0 = FALSE) #add in unique trial identifier
-setcolorder(bart_dt, c("trial_ID", "participant", "shift", "activity", "ballooncount", "wantedpumps", "explosion")) #reorder columns
-setnames(bart_dt, "wantedpumps", "pumps") #rename to match existing models
-setnames(bart_dt, "trial_ID", "subjID") #rename to match existing models
+bart_df <- read_excel("bart_df.xlsx")
 
+bart_df <- bart_df %>%
+  select(-date, -time, -blockcode, -trialnum, -pumpresult, -pumpcount,
+         -timebefore1stpump, -rotation, -d_n, -totalearningsBART, -explosionpoint) %>% #remove unneeded columns
+  mutate(subjID = paste0(participant, shift, activity)) %>% #Add in unique subject x trial identifier
+  relocate(subjID, .before = participant) %>% #move subjID to the front (personal preference)
+  rename(pumps = wantedpumps) #rename column as needed to match model files
+
+write_tsv(bart_df, "bart_df.tsv")
 
 ```
