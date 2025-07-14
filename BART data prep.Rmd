@@ -31,11 +31,10 @@ library(lmerTest)
 bart_df <- read_excel("bart_df.xlsx")
 
 bart_df <- bart_df %>%
-  select(-date, -time, -blockcode, -trialnum, -pumpresult, -pumpcount,
-         -timebefore1stpump, -rotation, -d_n, -totalearningsBART, -explosionpoint) %>% #remove unneeded columns
+  select(-date, -time, -blockcode, -trialnum, -timebefore1stpump, -rotation, -d_n, -totalearningsBART, -ballooncount,   -explosionpoint, -wantedpumps, -pumpresult) %>% #remove unneeded columns
   mutate(subjID = paste0(participant, shift, activity)) %>% #Add in unique subject x trial identifier
   relocate(subjID, .before = participant) %>% #move subjID to the front (personal preference)
-  rename(pumps = wantedpumps) #rename column as needed to match model files
+  rename(pumps = pumpcount) #rename column as needed to match model files
 
 write_tsv(bart_df, "df.tsv")
 
