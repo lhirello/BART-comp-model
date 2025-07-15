@@ -48,13 +48,13 @@ write_tsv(bart_df, "df.tsv")
 library(hBayesDM)
 library(rstan)
 library(tictoc)
+library(blastula)
 
 rstan_options(auto_write = TRUE)
 options(mc.cores = parallel::detectCores())
 
 dataPath = system.file("df.tsv", package="hBayesDM")
 
-output1 = bart_ewmv(data="bart", niter=2000, nwarmup=1000, nchain=4, ncore=4)
 
 tic()
 bart_ewmv(
@@ -74,6 +74,8 @@ bart_ewmv(
   max_treedepth = 10
 )
 toc()
+
+output1 = bart_ewmv(data="bart", niter=2000, nwarmup=1000, nchain=4, ncore=4)
 
 
 ```
