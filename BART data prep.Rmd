@@ -40,6 +40,10 @@ anyNA(bart_df)
 
 write_tsv(bart_df, "df.tsv")
 
+
+subset_df <- bart_df[bart_df$subjID == "15D11", ]
+write_tsv(subset_df, "subset_df.tsv")
+
 ```
 
 
@@ -53,12 +57,12 @@ library(blastula)
 rstan_options(auto_write = TRUE)
 options(mc.cores = parallel::detectCores())
 
-dataPath = system.file("df.tsv", package="hBayesDM")
+dataPath = system.file("subset_df.tsv", package="hBayesDM")
 
 
 tic()
 bart_ewmv(
-  data = "df.tsv",
+  data = "subset_df.tsv",
   niter = 2000,
   nwarmup = 1000,
   nchain = 4,
