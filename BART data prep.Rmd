@@ -62,6 +62,8 @@ tic()
 output1 <- bart_ewmv(data="subset_df.tsv", niter=2000, nwarmup=1000, nchain=4, ncore=4)
 toc()
 
+saveRDS(output1, file = "bart_model_output.rds")
+
 
 bart_ewmv(
   data = "subset_df.tsv",
@@ -81,7 +83,6 @@ bart_ewmv(
 )
 
 
-saveRDS(output1, file = "bart_model_output.rds")
 
 ```
 
