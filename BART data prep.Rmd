@@ -57,10 +57,12 @@ rstan_options(auto_write = TRUE)
 options(mc.cores = parallel::detectCores())
 
 dataPath = system.file("subset_df.tsv", package="hBayesDM")
-output1 <- bart_ewmv(data="subset_df.tsv", niter=2000, nwarmup=1000, nchain=4, ncore=4)
-
 
 tic()
+output1 <- bart_ewmv(data="subset_df.tsv", niter=2000, nwarmup=1000, nchain=4, ncore=4)
+toc()
+
+
 bart_ewmv(
   data = "subset_df.tsv",
   niter = 2000,
@@ -77,8 +79,9 @@ bart_ewmv(
   stepsize = 1,
   max_treedepth = 10
 )
-toc()
 
+
+saveRDS(output1, file = "bart_model_output.rds")
 
 ```
 
