@@ -40,7 +40,7 @@ anyNA(bart_df)
 
 write_tsv(bart_df, "df.tsv")
 
-subset_df <- bart_df[bart_df$subjID %in% c("15D11", "15D12"), ]
+subset_df <- bart_df[bart_df$participant %in% c("15", "16"), ]
 write_tsv(subset_df, "subset_df.tsv")
 
 ```
