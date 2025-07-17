@@ -65,24 +65,6 @@ toc()
 saveRDS(output24, file = "bart_model_output24.rds")
 
 
-bart_ewmv(
-  data = "subset_df.tsv",
-  niter = 2000,
-  nwarmup = 1000,
-  nchain = 4,
-  ncore = 4,
-  nthin = 1,
-  inits = "vb",
-  indPars = "mean",
-  modelRegressor = FALSE,
-  vb = FALSE,
-  inc_postpred = FALSE,
-  adapt_delta = 0.95,
-  stepsize = 1,
-  max_treedepth = 10
-)
-
-
 
 ```
 
