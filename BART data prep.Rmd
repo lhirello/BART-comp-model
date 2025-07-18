@@ -40,7 +40,7 @@ anyNA(bart_df)
 
 write_tsv(bart_df, "df.tsv")
 
-subset_df <- bart_df[bart_df$participant %in% c("14", "15", "16"), ]
+subset_df <- bart_df[bart_df$participant %in% c("16", "15", "14", "13", "12"), ]
 write_tsv(subset_df, "subset_df.tsv")
 
 ```
@@ -59,10 +59,10 @@ options(mc.cores = parallel::detectCores())
 dataPath = system.file("subset_df.tsv", package="hBayesDM")
 
 tic()
-output24 <- bart_ewmv(data="subset_df.tsv", niter=2000, nwarmup=1000, nchain=4, ncore=4)
+output40_4k <- bart_ewmv(data="subset_df.tsv", niter=4000, nwarmup=1000, nchain=4, ncore=4)
 toc()
 
-saveRDS(output24, file = "bart_model_output24.rds")
+saveRDS(output40_4k, file = "bart_model_output40_4k.rds")
 
 
 
