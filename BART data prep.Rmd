@@ -64,6 +64,18 @@ toc()
 
 saveRDS(output40_4k, file = "bart_model_output40_4k.rds")
 
+#check model outputs
+#outputXX_Yk$allIndPars
+#outputXX_Yk$fit
+#plot(outputXX_Yk, type="trace", fontSize=11)
+#plot(outputXX_Yk, type="trace", inc_warmup=T)   # traceplot of hyper parameters w/ warmup samples
+
+#plotInd(outputXX_Yk, "phi")
+#plotInd(outputXX_Yk, "eta")
+#plotInd(outputXX_Yk, "rho")
+#plotInd(outputXX_Yk, "tau")
+#plotInd(outputXX_Yk, "lambda")
+
 
 
 ```
