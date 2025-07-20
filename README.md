@@ -1,6 +1,20 @@
 # BART-comp-model
 Computational Modelling of the BART
 
+---
+July 21, 2025
+model output naming convention: outputXX_Yk
+  XX = number of SubjIDs in the data set
+  Yk = number of iterations
+
+Current(output40_4k) errors:
+
+Divergent transitions after warmup, see https://mc-stan.org/misc/warnings.html#divergent-transitions-after-warmup
+Transitions after warmup that exceed max treedepth, see https://mc-stan.org/misc/warnings.html#maximum-treedepth-exceeded
+Max R-hat is 3.88 -> chains have not mixed, see https://mc-stan.org/misc/warnings.html#r-hat
+Bulk effect sample size (ESS) is too low -> may need more iterations, see https://mc-stan.org/misc/warnings.html#bulk-ess
+Tail Effective samples size (ESS) is too low -> may need more iterations, see https://mc-stan.org/misc/warnings.html#tail-ess
+
 
 Helpful references and papers:
 
