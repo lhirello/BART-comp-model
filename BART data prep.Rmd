@@ -40,7 +40,7 @@ anyNA(bart_df)
 
 write_tsv(bart_df, "df.tsv")
 
-subset_df <- bart_df[bart_df$participant %in% c("16", "15", "14", "13", "12"), ]
+subset_df <- bart_df[bart_df$subjID %in% c("16D11", "15D11"), ]
 write_tsv(subset_df, "subset_df.tsv")
 
 ```
@@ -56,7 +56,32 @@ library(blastula)
 rstan_options(auto_write = TRUE)
 options(mc.cores = parallel::detectCores())
 
-dataPath = system.file("subset_df.tsv", package="hBayesDM")
+#dataPath = system.file("subset_df.tsv", package="hBayesDM") #for the hBayesDM stan model without any changes
+
+setwd("C:\Users\laura\OneDrive\Documents\GitHub\BART-comp-model")  # e.g., "~/Documents/myrepo"
+
+stan_file <- file.path("models", "asap_bart_ewmv.stan")
+mod <- stan_model(file = stan_file)
+fit <- sampling(mod, data = "subset_df.tsv", chains = 4, iter = 2000)
+
+data_list <- list(
+  N = N,
+  T = T,
+  Tsubj = Tsubj,
+  P = P,
+  pumps = pumps,
+  explosion = explosion
+)
+
+fit <- sampling(
+  object = mod,
+  data = data_list,
+  chains = 4,
+  iter = 2000,
+  warmup = 1000,
+  seed = 123
+)
+
 
 tic()
 output40_4k <- bart_ewmv(data="subset_df.tsv", niter=4000, nwarmup=1000, nchain=4, ncore=4)
