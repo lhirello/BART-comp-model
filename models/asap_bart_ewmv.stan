@@ -44,7 +44,7 @@ transformed parameters {
   vector<lower=0,upper=1>[N] phi;
   vector<lower=0>[N] eta;
   vector<lower=-0.5,upper=0.5>[N] rho;
-  vector<lower=0>[N] tau;
+  vector<lower=0,upper=20>[N] tau;
   vector<lower=0>[N] lambda;
 
   phi = Phi_approx(mu_pr[1] + sigma[1] * phi_pr);
