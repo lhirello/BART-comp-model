@@ -76,7 +76,7 @@ saveRDS(output40_4k, file = "bart_model_output40_4k.rds")
 #plotInd(outputXX_Yk, "tau")
 #plotInd(outputXX_Yk, "lambda")
 
-
+output40_4k$allIndPars
 
 ```
 
