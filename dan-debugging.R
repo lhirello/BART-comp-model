@@ -15,10 +15,10 @@ bart_df <- bart_df %>%
   mutate(subjID = paste0(participant, shift, activity)) %>% #Add in unique subject x trial identifier
   relocate(subjID, .before = participant) %>% #move subjID to the front (personal preference)
   rename(pumps = pumpcount) #rename column as needed to match model files
-subset_df <- bart_df[bart_df$subjID %in% unique(bart_df$subjID)[1:10], ]
+subset_df <- bart_df[bart_df$subjID %in% unique(bart_df$subjID)[1:30], ]
 
 ## compile the model
-stan_file <- file.path("models", "asap_bart_ewmv.stan")
+stan_file <- file.path("models", "asap_bart_ewmv_db.stan")
 mod <- stan_model(file = stan_file)
 
 ## reorder the dataframe
@@ -71,10 +71,10 @@ tic()
 output <- sampling( #run the actual models
   object = mod,
   data = data_list,
-  chains = 1,
-  iter = 200,
-  warmup = 100,
-  seed = 123
+  chains = 2,
+  iter = 1000,
+  warmup = 500
+  # seed = 123
 )
 toc()
 
@@ -83,7 +83,7 @@ posterior_samples <- rstan::extract(output)
 phi_means    <- apply(posterior_samples$phi,    2, mean)
 eta_means    <- apply(posterior_samples$eta,    2, mean)
 rho_means    <- apply(posterior_samples$rho,    2, mean)
-tau_means    <- apply(posterior_samples$tau,    2, mean)
+# tau_means    <- apply(posterior_samples$tau,    2, mean)
 lambda_means <- apply(posterior_samples$lambda, 2, mean)
 N <- dim(posterior_samples$phi)[2]  # or just hard-code if you know N
 
@@ -92,7 +92,7 @@ param_summary <- data.frame(
   phi = phi_means,
   eta = eta_means,
   rho = rho_means,
-  tau = tau_means,
+  # tau = tau_means,
   lambda = lambda_means
 )
 
