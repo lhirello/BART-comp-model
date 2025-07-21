@@ -40,7 +40,7 @@ anyNA(bart_df)
 
 write_tsv(bart_df, "df.tsv")
 
-subset_df <- bart_df[bart_df$participant %in% c("16"), ]
+subset_df <- bart_df[bart_df$subjID %in% c("16D11", "16D12"), ]
 write_tsv(subset_df, "subset_df.tsv")
 
 ```
@@ -123,7 +123,7 @@ data_list <- list(
 )
 
 tic()
-output8_2k <- sampling( #run the actual models
+output <- sampling( #run the actual models
   object = mod,
   data = data_list,
   chains = 4,
