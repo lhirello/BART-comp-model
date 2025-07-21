@@ -40,7 +40,7 @@ anyNA(bart_df)
 
 write_tsv(bart_df, "df.tsv")
 
-subset_df <- bart_df[bart_df$subjID %in% c("16D11", "15D11"), ]
+subset_df <- bart_df[bart_df$participant %in% c("16"), ]
 write_tsv(subset_df, "subset_df.tsv")
 
 ```
@@ -56,40 +56,15 @@ library(blastula)
 rstan_options(auto_write = TRUE)
 options(mc.cores = parallel::detectCores())
 
+#code if using the hBayesDM package
 #dataPath = system.file("subset_df.tsv", package="hBayesDM") #for the hBayesDM stan model without any changes
-
-setwd("C:\Users\laura\OneDrive\Documents\GitHub\BART-comp-model")  # e.g., "~/Documents/myrepo"
-
-stan_file <- file.path("models", "asap_bart_ewmv.stan")
-mod <- stan_model(file = stan_file)
-fit <- sampling(mod, data = "subset_df.tsv", chains = 4, iter = 2000)
-
-data_list <- list(
-  N = N,
-  T = T,
-  Tsubj = Tsubj,
-  P = P,
-  pumps = pumps,
-  explosion = explosion
-)
-
-fit <- sampling(
-  object = mod,
-  data = data_list,
-  chains = 4,
-  iter = 2000,
-  warmup = 1000,
-  seed = 123
-)
-
-
-tic()
-output40_4k <- bart_ewmv(data="subset_df.tsv", niter=4000, nwarmup=1000, nchain=4, ncore=4)
-toc()
-
-saveRDS(output40_4k, file = "bart_model_output40_4k.rds")
-
+#fit <- sampling(mod, data = "subset_df.tsv", chains = 4, iter = 2000)
 #check model outputs
+
+#output40_4k <- bart_ewmv(data="subset_df.tsv", niter=4000, nwarmup=1000, nchain=4, ncore=4)
+
+#saveRDS(output40_4k, file = "bart_model_output40_4k.rds")
+
 #outputXX_Yk$allIndPars
 #outputXX_Yk$fit
 #plot(outputXX_Yk, type="trace", fontSize=11)
@@ -101,7 +76,85 @@ saveRDS(output40_4k, file = "bart_model_output40_4k.rds")
 #plotInd(outputXX_Yk, "tau")
 #plotInd(outputXX_Yk, "lambda")
 
-output40_4k$allIndPars
+
+setwd("C:/Users/laura/OneDrive/Documents/GitHub/BART-comp-model")
+
+stan_file <- file.path("models", "asap_bart_ewmv.stan")
+mod <- stan_model(file = stan_file)
+
+subset_df <- subset_df %>%
+  arrange(subjID)
+
+subjects <- unique(subset_df$subjID) # Get unique subjects
+N <- length(subjects)
+
+trials_per_subject <- subset_df %>% # Get number of trials per subject:
+  group_by(subjID) %>%
+  summarise(n_trials = n())
+
+T <- max(trials_per_subject$n_trials)
+Tsubj <- trials_per_subject$n_trials
+
+P <- 128  # max pumps + 1 (127 + 1)
+
+subset_df <- subset_df %>% # Create trial numbers for each subject assuming rows are ordered by trial within subjID
+  group_by(subjID) %>%
+  mutate(trial = row_number()) %>%
+  ungroup()
+
+pumps <- subset_df %>% # Reshape to wide format for pumps and explosion
+  select(subjID, trial, pumps) %>%
+  pivot_wider(names_from = trial, values_from = pumps) %>%
+  select(-subjID) %>%
+  as.matrix()
+explosion <- subset_df %>%
+  select(subjID, trial, explosion) %>%
+  pivot_wider(names_from = trial, values_from = explosion) %>%
+  select(-subjID) %>%
+  as.matrix()
+
+data_list <- list(
+  N = N,
+  T = T,
+  Tsubj = Tsubj,
+  P = P,
+  pumps = pumps,
+  explosion = explosion
+)
+
+tic()
+output8_2k <- sampling( #run the actual models
+  object = mod,
+  data = data_list,
+  chains = 4,
+  iter = 2000,
+  warmup = 1000,
+  seed = 123
+)
+toc()
+
+saveRDS(output, file = "outputs/asap_bart_output.rds")
+
+#get results from model
+posterior_samples <- rstan::extract(fit)
+phi_means    <- apply(posterior_samples$phi,    2, mean)
+eta_means    <- apply(posterior_samples$eta,    2, mean)
+rho_means    <- apply(posterior_samples$rho,    2, mean)
+tau_means    <- apply(posterior_samples$tau,    2, mean)
+lambda_means <- apply(posterior_samples$lambda, 2, mean)
+N <- dim(posterior_samples$phi)[2]  # or just hard-code if you know N
+
+param_summary <- data.frame(
+  subjID = 1:N,
+  phi = phi_means,
+  eta = eta_means,
+  rho = rho_means,
+  tau = tau_means,
+  lambda = lambda_means
+)
+
+print(param_summary)
+
 
 ```
 
