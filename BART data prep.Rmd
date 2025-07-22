@@ -40,7 +40,7 @@ anyNA(bart_df)
 
 write_tsv(bart_df, "df.tsv")
 
-subset_df <- bart_df[bart_df$subjID %in% c("16D11", "16D12"), ]
+subset_df <- bart_df[bart_df$participant %in% c("16", "15", "14"), ]
 write_tsv(subset_df, "subset_df.tsv")
 
 ```
@@ -123,7 +123,7 @@ data_list <- list(
 )
 
 tic()
-output <- sampling( #run the actual models
+output24 <- sampling( #run the actual models
   object = mod,
   data = data_list,
   chains = 4,
@@ -133,10 +133,10 @@ output <- sampling( #run the actual models
 )
 toc()
 
-saveRDS(output, file = "outputs/asap_bart_output.rds")
+saveRDS(output24, file = "outputs/asap_bart_output24.rds")
 
 #get results from model
-posterior_samples <- rstan::extract(fit)
+posterior_samples <- rstan::extract(output24)
 phi_means    <- apply(posterior_samples$phi,    2, mean)
 eta_means    <- apply(posterior_samples$eta,    2, mean)
 rho_means    <- apply(posterior_samples$rho,    2, mean)
