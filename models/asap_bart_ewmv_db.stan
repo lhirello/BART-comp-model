@@ -32,13 +32,14 @@ parameters {
   vector<lower=0,upper=1>[N] phi;
   vector<lower=0>[N]         eta;
   vector<lower=0,upper=1>[N] rho_pr;
-  // vector<lower=0>[N]         tau;
+  // vector<lower=0>[N]         tau_pr;
   vector<lower=0>[N]         lambda;
   
 }
 
 transformed parameters {
   
+  vector[N] tau = rep_vector(0.99, N);
   vector<lower=-0.5, upper=0.5>[N] rho = 0.5 - rho_pr;
 
 }
@@ -49,7 +50,7 @@ model {
   phi    ~ beta(1, 1);
   eta    ~ exponential(1);
   rho_pr ~ beta(1, 1);
-  // tau    ~ uniform(0, 2);
+  // tau_pr ~ uniform(0, 2);
   lambda ~ exponential(1);
 
   // Likelihood
@@ -76,8 +77,8 @@ model {
         delta_u = u_pump - u_stop;
 
         // Calculate likelihood with bernoulli distribution
-        // d[j, k, l] ~ bernoulli_logit(tau[j] * delta_u);
-        d[j, k, l] ~ bernoulli_logit(delta_u);
+        d[j, k, l] ~ bernoulli_logit(tau[j] * delta_u);
+        // d[j, k, l] ~ bernoulli_logit(delta_u);
       }
 
       // Update n_succ and n_pump after each trial ends
@@ -131,10 +132,10 @@ generated quantities {
 
           delta_u = u_pump - u_stop;
 
-          // log_lik[j] += bernoulli_logit_lpmf(d[j, k, l] | tau[j] * delta_u);
-          // y_pred[j, k, l] = bernoulli_logit_rng(tau[j] * delta_u);
-          log_lik[j] += bernoulli_logit_lpmf(d[j, k, l] | delta_u);
-          y_pred[j, k, l] = bernoulli_logit_rng(delta_u);
+          log_lik[j] += bernoulli_logit_lpmf(d[j, k, l] | tau[j] * delta_u);
+          y_pred[j, k, l] = bernoulli_logit_rng(tau[j] * delta_u);
+          // log_lik[j] += bernoulli_logit_lpmf(d[j, k, l] | delta_u);
+          // y_pred[j, k, l] = bernoulli_logit_rng(delta_u);
         }
 
         // Update n_succ and n_pump after each trial ends

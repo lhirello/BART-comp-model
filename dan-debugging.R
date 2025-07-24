@@ -18,11 +18,11 @@ bart_df <- bart_df %>%
   mutate(subjID = paste0(participant, shift, activity)) %>% #Add in unique subject x trial identifier
   relocate(subjID, .before = participant) %>% #move subjID to the front (personal preference)
   rename(pumps = pumpcount) #rename column as needed to match model files
-subset_df <- bart_df[bart_df$subjID %in% unique(bart_df$subjID)[1:30], ]
+subset_df <- bart_df[bart_df$subjID %in% unique(bart_df$subjID)[1:10], ]
 
 ## pre-compile model
-file.remove(file.path(getwd(), "models", "asap_bart_emwv_db"))
-compiled_model <- cmdstan_model(file.path(getwd(), "models", "asap_bart_ewmv_db.stan"), force_recompile = F)
+file.remove(file.path(getwd(), "models", "bart_par4"))
+compiled_model <- cmdstan_model(file.path(getwd(), "models", "bart_par4.stan"), force_recompile = F)
 
 ## reorder the dataframe
 subset_df <- subset_df %>%
@@ -90,7 +90,7 @@ fit <- compiled_model$sample(
 toc()
 
 ## extract parameter samples (individual-level)
-indiv_pars <- c("phi", "eta", "rho", "lambda")
+indiv_pars <- c("phi", "eta", "gamma", "tau")
 
 indiv_par_samples_all <- read_cmdstan_csv(
   files=fit$output_files(),
