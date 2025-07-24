@@ -1,13 +1,16 @@
 ## packages
 library(readxl)
-library(tidyverse)
-library(hBayesDM)
-library(rstan)
+library(cmdstanr)
 library(tictoc)
-library(blastula)
+library(tidyverse)
 
 ## read in data
 bart_df <- read_excel("bart_df.xlsx")
+
+## set the cmdstan path
+if (Sys.info()["login"] == "DBENNETT1"){
+  set_cmdstan_path("/Users/dbennett1/.cmdstan/cmdstan-2.35.0")
+}
 
 ## arrange data
 bart_df <- bart_df %>%
@@ -17,9 +20,9 @@ bart_df <- bart_df %>%
   rename(pumps = pumpcount) #rename column as needed to match model files
 subset_df <- bart_df[bart_df$subjID %in% unique(bart_df$subjID)[1:30], ]
 
-## compile the model
-stan_file <- file.path("models", "asap_bart_ewmv_db.stan")
-mod <- stan_model(file = stan_file)
+## pre-compile model
+file.remove(file.path(getwd(), "models", "asap_bart_emwv_db"))
+compiled_model <- cmdstan_model(file.path(getwd(), "models", "asap_bart_ewmv_db.stan"), force_recompile = F)
 
 ## reorder the dataframe
 subset_df <- subset_df %>%
@@ -67,35 +70,44 @@ data_list <- list(
   explosion = explosion
 )
 
+## sample from model
 tic()
-output <- sampling( #run the actual models
-  object = mod,
-  data = data_list,
-  chains = 2,
-  iter = 1000,
-  warmup = 500
-  # seed = 123
+fit <- compiled_model$sample(
+  data            = data_list,
+  # chains          = 1,
+  # parallel_chains = 1,
+  # refresh         = 10,
+  # iter_warmup     = 100,
+  # iter_sampling   = 125,
+  chains          = 2,
+  parallel_chains = 2,
+  refresh         = 10,
+  iter_warmup     = 100,
+  iter_sampling   = 125,
+  # adapt_delta     = 0.9,
+  save_warmup     = FALSE
 )
 toc()
 
-#get results from model
-posterior_samples <- rstan::extract(output)
-phi_means    <- apply(posterior_samples$phi,    2, mean)
-eta_means    <- apply(posterior_samples$eta,    2, mean)
-rho_means    <- apply(posterior_samples$rho,    2, mean)
-# tau_means    <- apply(posterior_samples$tau,    2, mean)
-lambda_means <- apply(posterior_samples$lambda, 2, mean)
-N <- dim(posterior_samples$phi)[2]  # or just hard-code if you know N
+## extract parameter samples (individual-level)
+indiv_pars <- c("phi", "eta", "rho", "lambda")
 
-param_summary <- data.frame(
-  subjID = 1:N,
-  phi = phi_means,
-  eta = eta_means,
-  rho = rho_means,
-  # tau = tau_means,
-  lambda = lambda_means
+indiv_par_samples_all <- read_cmdstan_csv(
+  files=fit$output_files(),
+  variables = indiv_pars,
+  sampler_diagnostics = NULL,
+  format = getOption("cmdstanr_draws_format", "draws_df")
 )
-
-print(param_summary)
-
+indiv_par_samples <- vector(mode="list", length=length(indiv_pars))
+indiv_par_est <- matrix(NA, nrow= indiv_par_samples_all$metadata$stan_variable_sizes[[indiv_pars[1]]], ncol=length(indiv_pars))
+colnames(indiv_par_est) <- indiv_pars
+for (i in 1:length(indiv_par_samples)){
+  indiv_par_samples[[i]] <- as.matrix(indiv_par_samples_all$post_warmup_draws[seq(
+    from       = 1 + (i-1) * dim(indiv_par_est)[1],
+    to         = i * dim(indiv_par_est)[1],
+    length.out = dim(indiv_par_est)[1])
+  ])
+  indiv_par_est[,i] <- apply(indiv_par_samples[[i]], MARGIN=2, FUN=median)
+  hist(indiv_par_est[,i], main=indiv_pars[i], 25)
+}
 

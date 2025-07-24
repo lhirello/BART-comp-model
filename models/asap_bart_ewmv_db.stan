@@ -1,19 +1,18 @@
 // source for model code: https://github.com/CCS-Lab/hBayesDM/blob/develop/commons/stan_files/bart_ewmv.stan
 
 data {
-  int<lower=1> N;             // Number of subjects
-  int<lower=1> T;             // Maximum number of trials
-  int<lower=0> Tsubj[N];      // Number of trials for each subject
-  int<lower=2> P;             // Number of max pump + 1 ** CAUTION **
-  int<lower=0> pumps[N, T];   // Number of pump
-  // int<lower=0> reward[N, T];  // Amount of rewards
-  int<lower=0,upper=1> explosion[N, T];  // Whether the balloon exploded (0 or 1)
+  int<lower=1> N;                               // Number of subjects
+  int<lower=1> T;                               // Maximum number of trials
+  array[N] int<lower=0> Tsubj;                  // Number of trials for each subject
+  int<lower=2> P;                               // Number of max pump + 1 ** CAUTION **
+  array[N, T] int<lower=0> pumps;               // Number of pump
+  array[N, T] int<lower=0, upper=1> explosion;  // Whether the balloon exploded (0 or 1)
 }
 
 transformed data {
   
   // Whether a subject pump the button or not (0 or 1)
-  int d[N, T, P];
+  array[N, T, P] int d;
 
   for (j in 1:N) {
     for (k in 1:Tsubj[j]) {
@@ -95,10 +94,10 @@ model {
 generated quantities {
 
   // Log-likelihood for model fit
-  real log_lik[N];
+  array[N] real log_lik;
 
   // For posterior predictive check
-  real y_pred[N, T, P];
+  array[N, T, P] real y_pred;
 
   // Set all posterior predictions to 0 (avoids NULL values)
   for (j in 1:N)
