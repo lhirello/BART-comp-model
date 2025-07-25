@@ -31,16 +31,16 @@ parameters {
   // No hierarchical estimation
   vector<lower=0,upper=1>[N] phi;
   vector<lower=0>[N]         eta;
-  vector<lower=0,upper=1>[N] rho_pr;
-  // vector<lower=0>[N]         tau_pr;
+  vector[N] rho;
+  vector<lower=0>[N]         tau;
   vector<lower=0>[N]         lambda;
   
 }
 
 transformed parameters {
   
-  vector[N] tau = rep_vector(0.99, N);
-  vector<lower=-0.5, upper=0.5>[N] rho = 0.5 - rho_pr;
+  // vector[N] tau = rep_vector(1, N);
+  // vector<lower=-0.5, upper=0.5>[N] rho = 0.5 - rho_pr;
 
 }
 
@@ -49,8 +49,8 @@ model {
   // Prior
   phi    ~ beta(1, 1);
   eta    ~ exponential(1);
-  rho_pr ~ beta(1, 1);
-  // tau_pr ~ uniform(0, 2);
+  rho    ~ normal(0,10);
+  tau    ~ exponential(1);
   lambda ~ exponential(1);
 
   // Likelihood
@@ -68,6 +68,7 @@ model {
       real delta_u;
 
       for (l in 1:(pumps[j, k] + 1 - explosion[j, k])) {
+        
         u_loss = (l - 1);
 
         u_pump = (1 - p_burst) * u_gain - lambda[j] * p_burst * u_loss +

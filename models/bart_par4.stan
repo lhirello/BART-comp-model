@@ -29,10 +29,17 @@ parameters {
   vector<lower=0, upper=1>[N] phi;
   vector<lower=0>[N] eta;
   vector<lower=0>[N] gamma;
-  vector<lower=0>[N] tau;
+  // vector<lower=0>[N] tau;
+  // vector[N] eta_pr;
+  // vector[N] gamma_pr;
+  vector[N] tau_pr;
 }
 
 transformed parameters {
+  
+  // vector[N] eta   = Phi_approx(eta_pr);
+  // vector[N] gamma = Phi_approx(gamma_pr) * 5;
+  vector[N] tau   = Phi_approx(tau_pr) * 10;
 
 }
 
@@ -40,9 +47,13 @@ model {
   
   // Prior
   phi    ~ beta(1, 1);
-  eta    ~ exponential(1);
+  eta    ~ exponential(10);
   gamma  ~ exponential(1);
-  tau    ~ exponential(.1);
+  // tau    ~ exponential(1);
+  // eta_pr    ~ normal(0,1);
+  // gamma_pr  ~ normal(0,1);
+  tau_pr    ~ normal(0,1);
+
   
   // Likelihood
   for (j in 1:N) {

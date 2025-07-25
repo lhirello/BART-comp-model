@@ -15,10 +15,11 @@ if (Sys.info()["login"] == "DBENNETT1"){
 ## arrange data
 bart_df <- bart_df %>%
   select(-date, -time, -blockcode, -trialnum, -timebefore1stpump, -rotation, -d_n, -totalearningsBART, -ballooncount,   -explosionpoint, -wantedpumps, -pumpresult) %>% #remove unneeded columns
+  # select(-date, -time, -blockcode, -trialnum, -timebefore1stpump, -rotation, -d_n, -totalearningsBART, -ballooncount,   -explosion, -wantedpumps, -pumpresult) %>% #remove unneeded columns
   mutate(subjID = paste0(participant, shift, activity)) %>% #Add in unique subject x trial identifier
   relocate(subjID, .before = participant) %>% #move subjID to the front (personal preference)
   rename(pumps = pumpcount) #rename column as needed to match model files
-subset_df <- bart_df[bart_df$subjID %in% unique(bart_df$subjID)[1:10], ]
+# subset_df <- bart_df[bart_df$subjID %in% unique(bart_df$subjID)[1:20], ]
 
 ## pre-compile model
 file.remove(file.path(getwd(), "models", "bart_par4"))
@@ -79,18 +80,25 @@ fit <- compiled_model$sample(
   # refresh         = 10,
   # iter_warmup     = 100,
   # iter_sampling   = 125,
-  chains          = 2,
-  parallel_chains = 2,
-  refresh         = 10,
-  iter_warmup     = 100,
-  iter_sampling   = 125,
+  chains          = 4,
+  parallel_chains = 4,
+  refresh         = 100,
+  iter_warmup     = 1000,
+  iter_sampling   = 1250,
   # adapt_delta     = 0.9,
   save_warmup     = FALSE
 )
 toc()
 
 ## extract parameter samples (individual-level)
-indiv_pars <- c("phi", "eta", "gamma", "tau")
+indiv_pars <- c(
+  "phi", 
+  "eta", 
+  # "rho", 
+  "tau",
+  # "lambda",
+  "gamma"
+  )
 
 indiv_par_samples_all <- read_cmdstan_csv(
   files=fit$output_files(),
