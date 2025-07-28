@@ -15,7 +15,6 @@ if (Sys.info()["login"] == "DBENNETT1"){
 ## arrange data
 bart_df <- bart_df %>%
   select(-date, -time, -blockcode, -trialnum, -timebefore1stpump, -rotation, -d_n, -totalearningsBART, -ballooncount,   -explosionpoint, -wantedpumps, -pumpresult) %>% #remove unneeded columns
-  # select(-date, -time, -blockcode, -trialnum, -timebefore1stpump, -rotation, -d_n, -totalearningsBART, -ballooncount,   -explosion, -wantedpumps, -pumpresult) %>% #remove unneeded columns
   mutate(subjID = paste0(participant, shift, activity)) %>% #Add in unique subject x trial identifier
   relocate(subjID, .before = participant) %>% #move subjID to the front (personal preference)
   rename(pumps = pumpcount) #rename column as needed to match model files
