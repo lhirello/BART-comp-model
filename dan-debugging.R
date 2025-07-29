@@ -8,8 +8,10 @@ library(tidyverse)
 bart_df <- read_excel("bart_df.xlsx")
 
 ## set the cmdstan path
-if (Sys.info()["login"] == "DBENNETT1"){
-  set_cmdstan_path("/Users/dbennett1/.cmdstan/cmdstan-2.35.0")
+if (Sys.info()['login'] == "DBENNETT1"){
+  set_cmdstan_path("/Users/DBENNETT1/.cmdstan/cmdstan-2.35.0")
+} else if (Sys.info()['login'] == "danielbennett"){
+  set_cmdstan_path("/Users/danielbennett/.cmdstan/cmdstan-2.36.0/")
 }
 
 ## arrange data
@@ -18,7 +20,8 @@ bart_df <- bart_df %>%
   mutate(subjID = paste0(participant, shift, activity)) %>% #Add in unique subject x trial identifier
   relocate(subjID, .before = participant) %>% #move subjID to the front (personal preference)
   rename(pumps = pumpcount) #rename column as needed to match model files
-# subset_df <- bart_df[bart_df$subjID %in% unique(bart_df$subjID)[1:20], ]
+subset_df <- bart_df[bart_df$subjID %in% unique(bart_df$subjID)[1:20], ]
+# subset_df <- bart_df
 
 ## pre-compile model
 file.remove(file.path(getwd(), "models", "bart_par4"))
