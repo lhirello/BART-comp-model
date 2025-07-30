@@ -32,7 +32,9 @@ parameters {
   vector<lower=0,upper=1>[N] phi;
   vector<lower=0>[N]         eta;
   vector[N] rho;
-  vector<lower=0>[N]         tau;
+  // vector<lower=0>[N]         tau;
+  vector[N] tau_pr;
+
   vector<lower=0>[N]         lambda;
   
 }
@@ -40,7 +42,7 @@ parameters {
 transformed parameters {
   
   // vector[N] tau = rep_vector(1, N);
-  // vector<lower=-0.5, upper=0.5>[N] rho = 0.5 - rho_pr;
+  vector[N] tau   = Phi_approx(tau_pr) * 10;
 
 }
 
@@ -50,7 +52,9 @@ model {
   phi    ~ beta(1, 1);
   eta    ~ exponential(1);
   rho    ~ normal(0,10);
-  tau    ~ exponential(1);
+  // tau    ~ exponential(1);
+  tau_pr    ~ normal(0,1);
+
   lambda ~ exponential(1);
 
   // Likelihood
