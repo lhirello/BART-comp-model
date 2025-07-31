@@ -2,6 +2,28 @@
 Computational Modelling of the BART
 
 ---
+July 23, 2025
+Added progress notes:
+
+
+Modelling progress with 4 chains, 4 cores, 2000 MCMC and 1000 burn in samples:
+
+2 administrations ~7 min (not saved)
+8 administrations ~135 min -> 2.25 hours (not saved)
+16 administrations ~350 min -> 5.8 hours; output1, bart_model_output.rds
+24 administrations ~560 min -> 9.4 hours; output24, bart_model_output24.rds
+
+
+Modelling progress with 4 chains, 4 cores, 4000 MCMC and 1000 burn in samples:
+
+40 administrations ~ 30 hours; bart_model_output24_4k.rds
+
+
+Modelling progress with 4 chains, 2000 iterations, 1000 warmup and an upper limit of 20 for tau
+
+24 administations ~ 30 mins -> output24, asap_bart_output24.rds
+
+---
 July 21, 2025
 model output naming convention: outputXX_Yk
   XX = number of SubjIDs in the data set
@@ -14,7 +36,7 @@ Transitions after warmup that exceed max treedepth, see https://mc-stan.org/misc
 Max R-hat is 3.88 -> chains have not mixed, see https://mc-stan.org/misc/warnings.html#r-hat
 Bulk effect sample size (ESS) is too low -> may need more iterations, see https://mc-stan.org/misc/warnings.html#bulk-ess
 Tail Effective samples size (ESS) is too low -> may need more iterations, see https://mc-stan.org/misc/warnings.html#tail-ess
-
+----
 
 Helpful references and papers:
 
