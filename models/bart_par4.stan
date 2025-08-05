@@ -3,8 +3,9 @@ data {
   int<lower=1> T;            // Maximum number of trials
   array[N] int<lower=0> Tsubj;                  // Number of trials for each subject
   int<lower=2> P;            // Number of max pump + 1 ** CAUTION **
-  array[N, T] int<lower=0> pumps;               // Number of pump
-  array[N, T] int<lower=0, upper=1> explosion;  // Whether the balloon exploded (0 or 1)
+  array[N, T] int<lower=-1> pumps;               // Number of pump (-1 = missing)
+  array[N, T] int<lower=0> is_missing;          // Whether data is missing for this trial
+  array[N, T] int<lower=-1, upper=1> explosion;  // Whether the balloon exploded (0 or 1; -1 = missing)
 }
 
 transformed data{
@@ -69,12 +70,16 @@ model {
       omega = -gamma[j] / log1m(p_burst);
       
       // Calculate likelihood with bernoulli distribution
-      for (l in 1:(pumps[j, k] + 1 - explosion[j, k]))
-        d[j, k, l] ~ bernoulli_logit(tau[j] * (omega - l));
-      
-      // Update n_succ and n_pump after each trial ends
-      n_succ += pumps[j, k] - explosion[j, k];
-      n_pump += pumps[j, k];
+      if (is_missing[j,k] == 0){
+        for (l in 1:(pumps[j, k] + 1 - explosion[j, k])){
+          d[j, k, l] ~ bernoulli_logit(tau[j] * (omega - l));
+        }
+        
+        // Update n_succ and n_pump after each trial ends
+        n_succ += pumps[j, k] - explosion[j, k];
+        n_pump += pumps[j, k];
+      }
+
     }
   }
 }
@@ -107,13 +112,16 @@ generated quantities {
         p_burst = 1 - ((phi[j] + eta[j] * n_succ) / (1 + eta[j] * n_pump));
         omega = -gamma[j] / log1m(p_burst);
         
-        for (l in 1:(pumps[j, k] + 1 - explosion[j, k])) {
-          log_lik[j] += bernoulli_logit_lpmf(d[j, k, l] | tau[j] * (omega - l));
-          y_pred[j, k, l] = bernoulli_logit_rng(tau[j] * (omega - l));
+        if (is_missing[j,k] == 0){
+          for (l in 1:(pumps[j, k] + 1 - explosion[j, k])){
+            log_lik[j] += bernoulli_logit_lpmf(d[j, k, l] | tau[j] * (omega - l));
+            y_pred[j, k, l] = bernoulli_logit_rng(tau[j] * (omega - l));
+          }
+          
+          n_succ += pumps[j, k] - explosion[j, k];
+          n_pump += pumps[j, k];
+          
         }
-        
-        n_succ += pumps[j, k] - explosion[j, k];
-        n_pump += pumps[j, k];
       }
     }
   }
