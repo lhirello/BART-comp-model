@@ -40,7 +40,7 @@ transformed parameters {
   
   // vector[N] eta   = Phi_approx(eta_pr);
   // vector[N] gamma = Phi_approx(gamma_pr) * 5;
-  vector[N] tau   = Phi_approx(tau_pr) * 10;
+  vector[N] tau   = Phi_approx(tau_pr) * 20;
 
 }
 
