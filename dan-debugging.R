@@ -129,3 +129,5 @@
     hist(indiv_par_est[,i], main=indiv_pars[i], 25)
   }
   
+  save(indiv_par_est, file=file.path(getwd(), "outputs", "bart_par4.Rdata"))
+  
