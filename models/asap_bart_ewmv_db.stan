@@ -10,9 +10,10 @@ data {
 }
 
 transformed data {
+  
   // Whether a subject pump the button or not (0 or 1)
   array[N, T, P] int d;
-  
+
   for (j in 1:N) {
     for (k in 1:Tsubj[j]) {
       for (l in 1:P) {
@@ -26,45 +27,35 @@ transformed data {
 }
 
 parameters {
-  // Group-level parameters
-  vector[5] mu_pr;
-  vector<lower=0>[5] sigma;
-
-  // Normally distributed error for Matt trick
-  vector[N] phi_pr;
-  vector[N] eta_pr;
-  vector[N] rho_pr;
+  
+  // No hierarchical estimation
+  vector<lower=0,upper=1>[N] phi;
+  vector<lower=0>[N]         eta;
+  vector[N] rho;
+  // vector<lower=0>[N]         tau;
   vector[N] tau_pr;
-  vector[N] lambda_pr;
+
+  vector<lower=0>[N]         lambda;
+  
 }
 
 transformed parameters {
-  // Subject-level parameters with Matt trick
-  vector<lower=0,upper=1>[N] phi;
-  vector<lower=0>[N] eta;
-  // vector<lower=-0.5,upper=0.5>[N] rho;
-  vector[N] rho;
-  vector<lower=0>[N] tau;
-  vector<lower=0>[N] lambda;
+  
+  // vector[N] tau = rep_vector(1, N);
+  vector[N] tau   = Phi_approx(tau_pr) * 10;
 
-  phi = Phi_approx(mu_pr[1] + sigma[1] * phi_pr);
-  eta = Phi_approx(mu_pr[2] + sigma[2] * eta_pr);
-  // rho = 0.5 - Phi_approx(mu_pr[3] + sigma[3] * rho_pr);
-  rho = mu_pr[3] + sigma[3] * rho_pr;
-  tau = exp(mu_pr[4] + sigma[4] * tau_pr);
-  lambda = exp(mu_pr[5] + sigma[5] * lambda_pr);
 }
 
 model {
+  
   // Prior
-  mu_pr  ~ normal(0, 1);
-  sigma ~ normal(0, 0.2); // cauchy(0, 5);
+  phi    ~ beta(1, 1);
+  eta    ~ exponential(1);
+  rho    ~ normal(0,10);
+  // tau    ~ exponential(1);
+  tau_pr    ~ normal(0,1);
 
-  phi_pr ~ normal(0, 1);
-  eta_pr ~ normal(0, 1);
-  rho_pr ~ normal(0, 1);
-  tau_pr ~ normal(0, 1);
-  lambda_pr ~ normal(0, 1);
+  lambda ~ exponential(1);
 
   // Likelihood
   for (j in 1:N) {
@@ -81,6 +72,7 @@ model {
       real delta_u;
 
       for (l in 1:(pumps[j, k] + 1 - explosion[j, k])) {
+        
         u_loss = (l - 1);
 
         u_pump = (1 - p_burst) * u_gain - lambda[j] * p_burst * u_loss +
@@ -91,6 +83,7 @@ model {
 
         // Calculate likelihood with bernoulli distribution
         d[j, k, l] ~ bernoulli_logit(tau[j] * delta_u);
+        // d[j, k, l] ~ bernoulli_logit(delta_u);
       }
 
       // Update n_succ and n_pump after each trial ends
@@ -105,13 +98,6 @@ model {
 }
 
 generated quantities {
-  // Actual group-level mean
-  real<lower=0> mu_phi = Phi_approx(mu_pr[1]);
-  real<lower=0> mu_eta = Phi_approx(mu_pr[2]);
-  // real<lower=-0.5,upper=0.5> mu_rho = 0.5 - Phi_approx(mu_pr[3]);
-  real<lower=-0.5,upper=0.5> mu_rho = mu_pr[3];
-  real<lower=0> mu_tau = exp(mu_pr[4]);
-  real<lower=0> mu_lambda = exp(mu_pr[5]);
 
   // Log-likelihood for model fit
   array[N] real log_lik;
@@ -153,6 +139,8 @@ generated quantities {
 
           log_lik[j] += bernoulli_logit_lpmf(d[j, k, l] | tau[j] * delta_u);
           y_pred[j, k, l] = bernoulli_logit_rng(tau[j] * delta_u);
+          // log_lik[j] += bernoulli_logit_lpmf(d[j, k, l] | delta_u);
+          // y_pred[j, k, l] = bernoulli_logit_rng(delta_u);
         }
 
         // Update n_succ and n_pump after each trial ends
