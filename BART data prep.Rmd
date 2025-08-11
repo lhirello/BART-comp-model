@@ -34,14 +34,15 @@ bart_df <- bart_df %>%
   select(-date, -time, -blockcode, -trialnum, -timebefore1stpump, -rotation, -d_n, -totalearningsBART, -ballooncount,   -explosionpoint, -wantedpumps, -pumpresult) %>% #remove unneeded columns
   mutate(subjID = paste0(participant, shift, activity)) %>% #Add in unique subject x trial identifier
   relocate(subjID, .before = participant) %>% #move subjID to the front (personal preference)
-  rename(pumps = pumpcount) #rename column as needed to match model files
+  dplyr::rename(pumps = pumpcount) #rename column as needed to match model files
 
 anyNA(bart_df)
 
 write_tsv(bart_df, "df.tsv")
 
-#subset_df <- bart_df[bart_df$participant %in% c("16", "15", "14"), ]
-subset_df <- subset(bart_df, subjID != "09N12")
+subset_df <- bart_df %>%
+  filter(participant %in% c("16"))
+
 write_tsv(subset_df, "subset_df.tsv")
 
 ```
@@ -58,25 +59,32 @@ rstan_options(auto_write = TRUE)
 options(mc.cores = parallel::detectCores())
 
 #code if using the hBayesDM package
-#dataPath = system.file("subset_df.tsv", package="hBayesDM") #for the hBayesDM stan model without any changes
-#fit <- sampling(mod, data = "subset_df.tsv", chains = 4, iter = 2000)
+dataPath = system.file("subset_df.tsv", package="hBayesDM") #for the hBayesDM stan model without any changes
+fit <- sampling(mod, data = "subset_df.tsv", chains = 4, iter = 2000)
+
+tic()
+output8_2k <- bart_par4(data="subset_df.tsv", niter=2000, nwarmup=1000, nchain=4, ncore=4) 
+saveRDS(output8_2k, file = "bart_par4_output8_2k.rds")
+toc()
+
 #check model outputs
+output8_2k$allIndPars
+output8_2k$fit
+plot(outputXX_Yk, type="trace", fontSize=11)
+plot(output8_2k, type="trace", inc_warmup=T)   # traceplot of hyper parameters w/ warmup samples
 
-#output40_4k <- bart_ewmv(data="subset_df.tsv", niter=4000, nwarmup=1000, nchain=4, ncore=4)
+plotInd(output3_2k, "phi")
+plotInd(output3_2k, "eta")
+plotInd(output8_2k, "gam")
+plotInd(output3_2k, "tau")
 
-#saveRDS(output40_4k, file = "bart_model_output40_4k.rds")
+```
 
-#outputXX_Yk$allIndPars
-#outputXX_Yk$fit
-#plot(outputXX_Yk, type="trace", fontSize=11)
-#plot(outputXX_Yk, type="trace", inc_warmup=T)   # traceplot of hyper parameters w/ warmup samples
 
-#plotInd(outputXX_Yk, "phi")
-#plotInd(outputXX_Yk, "eta")
-#plotInd(outputXX_Yk, "rho")
-#plotInd(outputXX_Yk, "tau")
-#plotInd(outputXX_Yk, "lambda")
 
+```{r}
+
+#Code if you are using a .stan model from github
 setwd("C:/Users/laura/OneDrive/Documents/GitHub/BART-comp-model")
 
 stan_file <- file.path("models", "asap_bart_ewmv.stan")
