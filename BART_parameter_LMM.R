@@ -4,6 +4,9 @@ library(dplyr)
 library(lme4)
 library(lmerTest)
 library(multilevelTools)
+library("writexl")
+library("readxl")
+
 #First make sure that bart_par4_15Aug25.Rdata is loaded
 
 parameters <- cbind(subjID, indiv_par_est)
@@ -27,6 +30,18 @@ para_dt <- para_dt %>%
     TRUE ~ NA_character_
   ))
 
+para_dt[, phi := as.numeric(phi)]
+para_dt[, eta := as.numeric(eta)]
+para_dt[, gamma := as.numeric(gamma)]
+para_dt[, tau := as.numeric(tau)]
+
+para_dt <- para_dt %>%
+  mutate(consistency = case_when(
+    tau >= 7.5 ~ "consistent",
+    tau <= 7.5 ~ "inconsistent",
+    TRUE ~ NA_character_
+  ))
+
 para_dt$participant <- factor(para_dt$participant,
                             levels = c("01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12", "13", "14", "15", "16"))
 para_dt$shift <- factor(para_dt$shift,
@@ -35,12 +50,12 @@ para_dt$activity <- factor(para_dt$activity,
                          levels = c("1", "2"))
 para_dt$d_n <- factor(para_dt$d_n,
                     levels = c("day", "night"))
-para_dt[, phi := as.numeric(phi)]
-para_dt[, eta := as.numeric(eta)]
-para_dt[, gamma := as.numeric(gamma)]
-para_dt[, tau := as.numeric(tau)]
+para_dt$consistency <- factor(para_dt$consistency,
+                      levels = c("consistent", "inconsistent"))
 
 anyNA(para_dt)
+
+
 
 #tomorrow need to write the code to load the files these came from so they still work
 para_dt[kss_sim_dt, on = .(trial_ID = trial_ID_mod), kss := i.kss]
@@ -53,6 +68,7 @@ para_dt[wide_sa_sim_dt, on = .(trial_ID = trial_ID), `:=`(
   sa = i.sa
 )]
 
+write_xlsx(para_dt, "para_dt.xlsx")
 
 #LMM
 #phi - prior belief of success
@@ -155,7 +171,6 @@ summary(m.tau.activity)
 m.tau.shift_act <- lmer(tau ~ shift + activity + shift:activity + (1 | participant), data = para_dt)
 summary(m.tau.shift_act)
 
-
 m.tau.kss <- lmer(tau ~ kss + (1 | participant), data = para_dt)
 summary(m.tau.kss)
 m.tau.shift_kss <- lmer(tau ~ shift + kss + shift:kss + (1 | participant), data = para_dt)
@@ -175,3 +190,4 @@ m.tau.sa_eff <- lmer(tau ~ eff + (1 | participant), data = para_dt)
 summary(m.tau.sa_eff)
 m.tau.sa_mot <- lmer(tau ~ mot + (1 | participant), data = para_dt)
 summary(m.tau.sa_mot)
+
