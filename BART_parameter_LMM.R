@@ -42,6 +42,7 @@ para_dt <- para_dt %>%
     TRUE ~ NA_character_
   ))
 
+
 para_dt$participant <- factor(para_dt$participant,
                             levels = c("01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12", "13", "14", "15", "16"))
 para_dt$shift <- factor(para_dt$shift,
@@ -52,6 +53,8 @@ para_dt$d_n <- factor(para_dt$d_n,
                     levels = c("day", "night"))
 para_dt$consistency <- factor(para_dt$consistency,
                       levels = c("consistent", "inconsistent"))
+para_dt$sex <- factor(para_dt$sex,
+                      levels = c("F", "M"))
 
 anyNA(para_dt)
 
@@ -68,7 +71,42 @@ para_dt[wide_sa_sim_dt, on = .(trial_ID = trial_ID), `:=`(
   sa = i.sa
 )]
 
+simpart_dt <- as.data.table(read_csv("simpart_df.csv"))
+simpart_dt <- simpart_dt %>%
+  mutate(participant = case_when(
+    participant == 1 ~ "01",
+    participant == 2 ~ "02",
+    participant == 3 ~ "03",
+    participant == 4 ~ "04",
+    participant == 5 ~ "05",
+    participant == 6 ~ "06",
+    participant == 7 ~ "07",
+    participant == 8 ~ "08",
+    participant == 9 ~ "09",
+    participant == 10 ~ "10",
+    participant == 11 ~ "11",
+    participant == 12 ~ "12",
+    participant == 13 ~ "13",
+    participant == 14 ~ "14",
+    participant == 15 ~ "15",
+    participant == 16 ~ "16",
+    TRUE ~ NA_character_
+  ))
+simpart_dt$participant <- factor(simpart_dt$participant,
+    levels = c("01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12", "13", "14", "15", "16"))
+para_dt[simpart_dt, on = .(participant = participant), `:=`(
+  sex = i.sex,
+  sex_numerical = i.sex_numerical,
+  service = i.service,
+  months_experience = i.months_experience,
+  age = i.age
+)]
+
 write_xlsx(para_dt, "para_dt.xlsx")
+
+#Can only run this line if pvt_dt is loaded in the environment
+#para_dt[pvt_dt, on = .(trial_ID = trial_ID), avg_rxn_time := i.avg_rxn_time]
+
 
 #LMM
 #phi - prior belief of success
@@ -101,6 +139,27 @@ summary(m.phi.sa_eff)
 m.phi.sa_mot <- lmer(phi ~ mot + (1 | participant), data = para_dt)
 summary(m.phi.sa_mot)
 
+m.phi.rxnt <- lmer(phi ~ avg_rxn_time + (1 | participant), data = para_dt)
+summary(m.phi.rxnt)
+
+m.phi.shift_age <- lmer(phi ~ shift + age + shift:age + (1 | participant), data = para_dt)
+summary(m.phi.shift_age)
+m.phi.dn_age <- lmer(phi ~ d_n + age + d_n:age + (1 | participant), data = para_dt)
+summary(m.phi.dn_age)
+m.phi.activity_age <- lmer(phi ~ activity + age + activity:age + (1 | participant), data = para_dt)
+summary(m.phi.activity_age)
+m.phi.shift_act_age <- lmer(phi ~ shift + activity + age + shift:activity + shift:age + age:activity + (1 | participant), data = para_dt)
+summary(m.phi.shift_act_age)
+
+m.phi.kss_age <- lmer(phi ~ kss + age + kss:age + (1 | participant), data = para_dt)
+summary(m.phi.kss_age)
+m.phi.shift_kss_age <- lmer(phi ~ shift + kss + age + shift:kss + kss:age + shift:age + (1 | participant), data = para_dt)
+summary(m.phi.shift_kss_age)
+m.phi.sp_age <- lmer(phi ~ sp + age + sp:age + (1 | participant), data = para_dt)
+summary(m.phi.sp_age)
+m.phi.shift_sp_age <- lmer(phi ~ shift + sp + age + shift:sp + shift:age + age:sp + (1 | participant), data = para_dt)
+summary(m.phi.shift_sp_age)
+
 #eta - learning rate
 m.eta.shift <- lmer(eta ~ shift + (1 | participant), data = para_dt)
 summary(m.eta.shift)
@@ -130,6 +189,27 @@ m.eta.sa_eff <- lmer(eta ~ eff + (1 | participant), data = para_dt)
 summary(m.eta.sa_eff)
 m.eta.sa_mot <- lmer(eta ~ mot + (1 | participant), data = para_dt)
 summary(m.eta.sa_mot)
+
+m.eta.rxnt <- lmer(eta ~ avg_rxn_time + (1 | participant), data = para_dt)
+summary(m.eta.rxnt)
+
+m.eta.shift_age <- lmer(eta ~ shift + age + shift:age + (1 | participant), data = para_dt)
+summary(m.eta.shift_age)
+m.eta.dn_age <- lmer(eta ~ d_n + age + d_n:age + (1 | participant), data = para_dt)
+summary(m.eta.dn_age)
+m.eta.activity_age <- lmer(eta ~ activity + age + activity:age + (1 | participant), data = para_dt)
+summary(m.eta.activity_age)
+m.eta.shift_act_age <- lmer(eta ~ shift + activity + age + shift:activity + age:activity + shift:age + (1 | participant), data = para_dt)
+summary(m.eta.shift_act_age)
+
+m.eta.kss_age <- lmer(eta ~ kss + age + kss:age + (1 | participant), data = para_dt)
+summary(m.eta.kss_age)
+m.eta.shift_kss_age <- lmer(eta ~ shift + kss + age + shift:kss + kss:age + shift:age + (1 | participant), data = para_dt)
+summary(m.eta.shift_kss_age)
+m.eta.sp_age <- lmer(eta ~ sp + age + sp:age + (1 | participant), data = para_dt)
+summary(m.eta.sp_age)
+m.eta.shift_sp_age <- lmer(eta ~ shift + sp + age + shift:sp + shift:age + sp:age + (1 | participant), data = para_dt)
+summary(m.eta.shift_sp_age)
 
 #gamma - risk propensity
 m.gamma.shift <- lmer(gamma ~ shift + (1 | participant), data = para_dt)
@@ -161,6 +241,27 @@ summary(m.gamma.sa_eff)
 m.gamma.sa_mot <- lmer(gamma ~ mot + (1 | participant), data = para_dt)
 summary(m.gamma.sa_mot)
 
+m.gamma.rxnt <- lmer(gamma ~ avg_rxn_time + (1 | participant), data = para_dt)
+summary(m.gamma.rxnt)
+
+m.gamma.shift_age <- lmer(gamma ~ shift + age + shift:age + (1 | participant), data = para_dt)
+summary(m.gamma.shift_age)
+m.gamma.dn_age <- lmer(gamma ~ d_n + age + d_n:age + (1 | participant), data = para_dt)
+summary(m.gamma.dn_age)
+m.gamma.activity_age <- lmer(gamma ~ activity + age + activity:age + (1 | participant), data = para_dt)
+summary(m.gamma.activity_age)
+m.gamma.shift_act_age <- lmer(gamma ~ shift + activity + age + shift:activity + age:activity + shift:age + (1 | participant), data = para_dt)
+summary(m.gamma.shift_act_age)
+
+m.gamma.kss_age <- lmer(gamma ~ kss + age + kss:age + (1 | participant), data = para_dt)
+summary(m.gamma.kss_age)
+m.gamma.shift_kss_age <- lmer(gamma ~ shift + kss + age + shift:kss + kss:age + shift:age + (1 | participant), data = para_dt)
+summary(m.gamma.shift_kss_age)
+m.gamma.sp_age <- lmer(gamma ~ sp + age + sp:age + (1 | participant), data = para_dt)
+summary(m.gamma.sp_age)
+m.gamma.shift_sp_age <- lmer(gamma ~ shift + sp + age + shift:sp + shift:age + sp:age + (1 | participant), data = para_dt)
+summary(m.gamma.shift_sp_age)
+
 #tau - behavioral consistency
 m.tau.shift <- lmer(tau ~ shift + (1 | participant), data = para_dt)
 summary(m.tau.shift)
@@ -191,3 +292,23 @@ summary(m.tau.sa_eff)
 m.tau.sa_mot <- lmer(tau ~ mot + (1 | participant), data = para_dt)
 summary(m.tau.sa_mot)
 
+m.tau.rxnt <- lmer(tau ~ avg_rxn_time + (1 | participant), data = para_dt)
+summary(m.tau.rxnt)
+
+m.tau.shift_age <- lmer(tau ~ shift + age + shift:age + (1 | participant), data = para_dt)
+summary(m.tau.shift_age)
+m.tau.dn_age <- lmer(tau ~ d_n + age + d_n:age + (1 | participant), data = para_dt)
+summary(m.tau.dn_age)
+m.tau.activity_age <- lmer(tau ~ activity + age + activity:age + (1 | participant), data = para_dt)
+summary(m.tau.activity_age)
+m.tau.shift_act_age <- lmer(tau ~ shift + activity + age + shift:activity + age:activity + shift:age + (1 | participant), data = para_dt)
+summary(m.tau.shift_act_age)
+
+m.tau.kss_age <- lmer(tau ~ kss + age + kss:age + (1 | participant), data = para_dt)
+summary(m.tau.kss_age)
+m.tau.shift_kss_age <- lmer(tau ~ shift + kss + age + shift:kss + kss:age + shift:age + (1 | participant), data = para_dt)
+summary(m.tau.shift_kss_age)
+m.tau.sp_age <- lmer(tau ~ sp + age + sp:age + (1 | participant), data = para_dt)
+summary(m.tau.sp_age)
+m.tau.shift_sp_age <- lmer(tau ~ shift + sp + age + shift:sp + shift:age + sp:age + (1 | participant), data = para_dt)
+summary(m.tau.shift_sp_age)
