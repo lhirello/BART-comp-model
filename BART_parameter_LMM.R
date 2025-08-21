@@ -35,10 +35,14 @@ para_dt[, eta := as.numeric(eta)]
 para_dt[, gamma := as.numeric(gamma)]
 para_dt[, tau := as.numeric(tau)]
 
+para_dt[, c("mean_tau") :=mean(tau), by = participant]
+para_dt[, c("sd_tau") :=sd(tau), by = participant]
+
 para_dt <- para_dt %>%
   mutate(consistency = case_when(
-    tau >= 7.5 ~ "consistent",
-    tau <= 7.5 ~ "inconsistent",
+    mean_tau <= 1 & sd_tau <= 1 ~ "CI",
+    mean_tau >= 1 & sd_tau <= 1 ~ "CC",
+    mean_tau >= 1 & sd_tau >= 1 ~ "I",
     TRUE ~ NA_character_
   ))
 
@@ -52,11 +56,10 @@ para_dt$activity <- factor(para_dt$activity,
 para_dt$d_n <- factor(para_dt$d_n,
                     levels = c("day", "night"))
 para_dt$consistency <- factor(para_dt$consistency,
-                      levels = c("consistent", "inconsistent"))
+                      levels = c("CI", "I", "CC"))
 
 
 anyNA(para_dt)
-
 
 
 #tomorrow need to write the code to load the files these came from so they still work
@@ -124,6 +127,27 @@ write_xlsx(para_dt, "para_dt.xlsx")
 
 #Can only run this line if pvt_dt is loaded in the environment
 #para_dt[pvt_dt, on = .(trial_ID = trial_ID), avg_rxn_time := i.avg_rxn_time]
+
+#overall mean & SD
+mean(para_dt$tau)
+sd(para_dt$tau)
+
+#calculate tau means and sds for each group
+para_dt[consistency == "CC", .(mean_tauCC = mean(tau, na.rm = TRUE))]
+para_dt[consistency == "CI", .(mean_tauIC = mean(tau, na.rm = TRUE))]
+para_dt[consistency == "I", .(mean_tauI = mean(tau, na.rm = TRUE))]
+
+#ANOVA to see if group means are sig different (they are)
+anova.tau.consistency <- aov(tau ~ consistency, data = para_dt)
+summary(anova.tau.consistency)
+
+#kruskal test for non-normal groups with unequal variance -> significantly different
+kruskal.test(tau ~ consistency, data = para_dt)
+
+#show which groups are significant from each other -> they all are
+pairwise.wilcox.test(para_dt$tau, para_dt$consistency,
+                     p.adjust.method = "bonferroni")
+
 
 
 #LMM
@@ -261,6 +285,31 @@ summary(m.tau.sa_mot)
 
 m.tau.rxnt <- lmer(tau ~ avg_rxn_time + (1 | participant), data = para_dt)
 summary(m.tau.rxnt)
+
+#LMM - consistency as predictor
+m.phi.consistency <- lmer(phi ~ consistency + (1 | participant), data = para_dt)
+summary(m.phi.consistency)
+
+m.eta.consistency <- lmer(eta ~ consistency + (1 | participant), data = para_dt)
+summary(m.eta.consistency)
+
+m.gamma.consistency <- lmer(gamma ~ consistency + (1 | participant), data = para_dt)
+summary(m.gamma.consistency)
+
+m.tau.consistency <- lmer(tau ~ consistency + (1 | participant), data = para_dt)
+summary(m.tau.consistency)
+
+m.phi.consistency_rxnt <- lmer(phi ~ consistency + avg_rxn_time + consistency:avg_rxn_time + (1 | participant), data = para_dt)
+summary(m.phi.consistency_rxnt)
+
+m.eta.consistency_rxnt <- lmer(eta ~ consistency + avg_rxn_time + consistency:avg_rxn_time + (1 | participant), data = para_dt)
+summary(m.eta.consistency_rxnt)
+
+m.gamma.consistency_rxnt <- lmer(gamma ~ consistency + avg_rxn_time + consistency:avg_rxn_time + (1 | participant), data = para_dt)
+summary(m.gamma.consistency_rxnt)
+
+m.tau.consistency_rxnt <- lmer(tau ~ consistency + avg_rxn_time + consistency:avg_rxn_time + (1 | participant), data = para_dt)
+summary(m.tau.consistency_rxnt)
 
 ####LMM - controlling for Age
 #phi
@@ -1032,3 +1081,80 @@ m.tau.sp_isi_score <- lmer(tau ~ sp + isi_score + sp:isi_score + (1 | participan
 summary(m.tau.sp_isi_score)
 m.tau.shift_sp_isi_score <- lmer(tau ~ shift + sp + isi_score + shift:sp + shift:isi_score + sp:isi_score + (1 | participant), data = para_dt)
 summary(m.tau.shift_sp_isi_score)
+
+####LMM - controlling for consistency
+#phi
+m.phi.shift_consistency <- lmer(phi ~ shift + consistency + shift:consistency + (1 | participant), data = para_dt)
+summary(m.phi.shift_consistency)
+m.phi.dn_consistency <- lmer(phi ~ d_n + consistency + d_n:consistency + (1 | participant), data = para_dt)
+summary(m.phi.dn_consistency)
+m.phi.activity_consistency <- lmer(phi ~ activity + consistency + activity:consistency + (1 | participant), data = para_dt)
+summary(m.phi.activity_consistency)
+m.phi.shift_act_consistency <- lmer(phi ~ shift + activity + consistency + shift:activity + shift:consistency + consistency:activity + (1 | participant), data = para_dt)
+summary(m.phi.shift_act_consistency)
+
+m.phi.kss_consistency <- lmer(phi ~ kss + consistency + kss:consistency + (1 | participant), data = para_dt)
+summary(m.phi.kss_consistency)
+m.phi.shift_kss_consistency <- lmer(phi ~ shift + kss + consistency + shift:kss + kss:consistency + shift:consistency + (1 | participant), data = para_dt)
+summary(m.phi.shift_kss_consistency)
+m.phi.sp_consistency <- lmer(phi ~ sp + consistency + sp:consistency + (1 | participant), data = para_dt)
+summary(m.phi.sp_consistency)
+m.phi.shift_sp_consistency <- lmer(phi ~ shift + sp + consistency + shift:sp + shift:consistency + consistency:sp + (1 | participant), data = para_dt)
+summary(m.phi.shift_sp_consistency)
+
+#eta
+m.eta.shift_consistency <- lmer(eta ~ shift + consistency + shift:consistency + (1 | participant), data = para_dt)
+summary(m.eta.shift_consistency)
+m.eta.dn_consistency <- lmer(eta ~ d_n + consistency + d_n:consistency + (1 | participant), data = para_dt)
+summary(m.eta.dn_consistency)
+m.eta.activity_consistency <- lmer(eta ~ activity + consistency + activity:consistency + (1 | participant), data = para_dt)
+summary(m.eta.activity_consistency)
+m.eta.shift_act_consistency <- lmer(eta ~ shift + activity + consistency + shift:activity + consistency:activity + shift:consistency + (1 | participant), data = para_dt)
+summary(m.eta.shift_act_consistency)
+
+m.eta.kss_consistency <- lmer(eta ~ kss + consistency + kss:consistency + (1 | participant), data = para_dt)
+summary(m.eta.kss_consistency)
+m.eta.shift_kss_consistency <- lmer(eta ~ shift + kss + consistency + shift:kss + kss:consistency + shift:consistency + (1 | participant), data = para_dt)
+summary(m.eta.shift_kss_consistency)
+m.eta.sp_consistency <- lmer(eta ~ sp + consistency + sp:consistency + (1 | participant), data = para_dt)
+summary(m.eta.sp_consistency)
+m.eta.shift_sp_consistency <- lmer(eta ~ shift + sp + consistency + shift:sp + shift:consistency + sp:consistency + (1 | participant), data = para_dt)
+summary(m.eta.shift_sp_consistency)
+
+#gamma
+m.gamma.shift_consistency <- lmer(gamma ~ shift + consistency + shift:consistency + (1 | participant), data = para_dt)
+summary(m.gamma.shift_consistency)
+m.gamma.dn_consistency <- lmer(gamma ~ d_n + consistency + d_n:consistency + (1 | participant), data = para_dt)
+summary(m.gamma.dn_consistency)
+m.gamma.activity_consistency <- lmer(gamma ~ activity + consistency + activity:consistency + (1 | participant), data = para_dt)
+summary(m.gamma.activity_consistency)
+m.gamma.shift_act_consistency <- lmer(gamma ~ shift + activity + consistency + shift:activity + consistency:activity + shift:consistency + (1 | participant), data = para_dt)
+summary(m.gamma.shift_act_consistency)
+
+m.gamma.kss_consistency <- lmer(gamma ~ kss + consistency + kss:consistency + (1 | participant), data = para_dt)
+summary(m.gamma.kss_consistency)
+m.gamma.shift_kss_consistency <- lmer(gamma ~ shift + kss + consistency + shift:kss + kss:consistency + shift:consistency + (1 | participant), data = para_dt)
+summary(m.gamma.shift_kss_consistency)
+m.gamma.sp_consistency <- lmer(gamma ~ sp + consistency + sp:consistency + (1 | participant), data = para_dt)
+summary(m.gamma.sp_consistency)
+m.gamma.shift_sp_consistency <- lmer(gamma ~ shift + sp + consistency + shift:sp + shift:consistency + sp:consistency + (1 | participant), data = para_dt)
+summary(m.gamma.shift_sp_consistency)
+
+#tau
+m.tau.shift_consistency <- lmer(tau ~ shift + consistency + shift:consistency + (1 | participant), data = para_dt)
+summary(m.tau.shift_consistency)
+m.tau.dn_consistency <- lmer(tau ~ d_n + consistency + d_n:consistency + (1 | participant), data = para_dt)
+summary(m.tau.dn_consistency)
+m.tau.activity_consistency <- lmer(tau ~ activity + consistency + activity:consistency + (1 | participant), data = para_dt)
+summary(m.tau.activity_consistency)
+m.tau.shift_act_consistency <- lmer(tau ~ shift + activity + consistency + shift:activity + consistency:activity + shift:consistency + (1 | participant), data = para_dt)
+summary(m.tau.shift_act_consistency)
+
+m.tau.kss_consistency <- lmer(tau ~ kss + consistency + kss:consistency + (1 | participant), data = para_dt)
+summary(m.tau.kss_consistency)
+m.tau.shift_kss_consistency <- lmer(tau ~ shift + kss + consistency + shift:kss + kss:consistency + shift:consistency + (1 | participant), data = para_dt)
+summary(m.tau.shift_kss_consistency)
+m.tau.sp_consistency <- lmer(tau ~ sp + consistency + sp:consistency + (1 | participant), data = para_dt)
+summary(m.tau.sp_consistency)
+m.tau.shift_sp_consistency <- lmer(tau ~ shift + sp + consistency + shift:sp + shift:consistency + sp:consistency + (1 | participant), data = para_dt)
+summary(m.tau.shift_sp_consistency)
