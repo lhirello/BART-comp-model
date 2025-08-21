@@ -53,8 +53,7 @@ para_dt$d_n <- factor(para_dt$d_n,
                     levels = c("day", "night"))
 para_dt$consistency <- factor(para_dt$consistency,
                       levels = c("consistent", "inconsistent"))
-para_dt$sex <- factor(para_dt$sex,
-                      levels = c("F", "M"))
+
 
 anyNA(para_dt)
 
@@ -99,8 +98,27 @@ para_dt[simpart_dt, on = .(participant = participant), `:=`(
   sex_numerical = i.sex_numerical,
   service = i.service,
   months_experience = i.months_experience,
-  age = i.age
+  age = i.age,
+  isi_score = i.isi_score,
+  first_score = i.first_score,
+  bai_score = i.bai_score,
+  phq9_score = i.phq9_score,
+  swd_score = i.swd_score,
+  cbi_personal = i.cbi_personal,
+  cbi_work = i.cbi_work,
+  cbi_client = i.cbi_client,
+  cbi_total = i.cbi_total,
+  audit_score = i.audit_score,
+  pcl_total_score = i.pcl_total_score,
+  ace_score = i.ace_score,
+  emscsq_op = i.emscsq_op,
+  emscsq_org = i.emscsq_org,
+  emscsq_total = i.emscsq_total
 )]
+para_dt$sex <- factor(para_dt$sex,
+                      levels = c("female", "male"))
+para_dt$service <- factor(para_dt$service,
+                      levels = c("NT", "VIC", "WA", "QLD", "ACT"))
 
 write_xlsx(para_dt, "para_dt.xlsx")
 
@@ -142,24 +160,6 @@ summary(m.phi.sa_mot)
 m.phi.rxnt <- lmer(phi ~ avg_rxn_time + (1 | participant), data = para_dt)
 summary(m.phi.rxnt)
 
-m.phi.shift_age <- lmer(phi ~ shift + age + shift:age + (1 | participant), data = para_dt)
-summary(m.phi.shift_age)
-m.phi.dn_age <- lmer(phi ~ d_n + age + d_n:age + (1 | participant), data = para_dt)
-summary(m.phi.dn_age)
-m.phi.activity_age <- lmer(phi ~ activity + age + activity:age + (1 | participant), data = para_dt)
-summary(m.phi.activity_age)
-m.phi.shift_act_age <- lmer(phi ~ shift + activity + age + shift:activity + shift:age + age:activity + (1 | participant), data = para_dt)
-summary(m.phi.shift_act_age)
-
-m.phi.kss_age <- lmer(phi ~ kss + age + kss:age + (1 | participant), data = para_dt)
-summary(m.phi.kss_age)
-m.phi.shift_kss_age <- lmer(phi ~ shift + kss + age + shift:kss + kss:age + shift:age + (1 | participant), data = para_dt)
-summary(m.phi.shift_kss_age)
-m.phi.sp_age <- lmer(phi ~ sp + age + sp:age + (1 | participant), data = para_dt)
-summary(m.phi.sp_age)
-m.phi.shift_sp_age <- lmer(phi ~ shift + sp + age + shift:sp + shift:age + age:sp + (1 | participant), data = para_dt)
-summary(m.phi.shift_sp_age)
-
 #eta - learning rate
 m.eta.shift <- lmer(eta ~ shift + (1 | participant), data = para_dt)
 summary(m.eta.shift)
@@ -193,23 +193,6 @@ summary(m.eta.sa_mot)
 m.eta.rxnt <- lmer(eta ~ avg_rxn_time + (1 | participant), data = para_dt)
 summary(m.eta.rxnt)
 
-m.eta.shift_age <- lmer(eta ~ shift + age + shift:age + (1 | participant), data = para_dt)
-summary(m.eta.shift_age)
-m.eta.dn_age <- lmer(eta ~ d_n + age + d_n:age + (1 | participant), data = para_dt)
-summary(m.eta.dn_age)
-m.eta.activity_age <- lmer(eta ~ activity + age + activity:age + (1 | participant), data = para_dt)
-summary(m.eta.activity_age)
-m.eta.shift_act_age <- lmer(eta ~ shift + activity + age + shift:activity + age:activity + shift:age + (1 | participant), data = para_dt)
-summary(m.eta.shift_act_age)
-
-m.eta.kss_age <- lmer(eta ~ kss + age + kss:age + (1 | participant), data = para_dt)
-summary(m.eta.kss_age)
-m.eta.shift_kss_age <- lmer(eta ~ shift + kss + age + shift:kss + kss:age + shift:age + (1 | participant), data = para_dt)
-summary(m.eta.shift_kss_age)
-m.eta.sp_age <- lmer(eta ~ sp + age + sp:age + (1 | participant), data = para_dt)
-summary(m.eta.sp_age)
-m.eta.shift_sp_age <- lmer(eta ~ shift + sp + age + shift:sp + shift:age + sp:age + (1 | participant), data = para_dt)
-summary(m.eta.shift_sp_age)
 
 #gamma - risk propensity
 m.gamma.shift <- lmer(gamma ~ shift + (1 | participant), data = para_dt)
@@ -244,23 +227,7 @@ summary(m.gamma.sa_mot)
 m.gamma.rxnt <- lmer(gamma ~ avg_rxn_time + (1 | participant), data = para_dt)
 summary(m.gamma.rxnt)
 
-m.gamma.shift_age <- lmer(gamma ~ shift + age + shift:age + (1 | participant), data = para_dt)
-summary(m.gamma.shift_age)
-m.gamma.dn_age <- lmer(gamma ~ d_n + age + d_n:age + (1 | participant), data = para_dt)
-summary(m.gamma.dn_age)
-m.gamma.activity_age <- lmer(gamma ~ activity + age + activity:age + (1 | participant), data = para_dt)
-summary(m.gamma.activity_age)
-m.gamma.shift_act_age <- lmer(gamma ~ shift + activity + age + shift:activity + age:activity + shift:age + (1 | participant), data = para_dt)
-summary(m.gamma.shift_act_age)
 
-m.gamma.kss_age <- lmer(gamma ~ kss + age + kss:age + (1 | participant), data = para_dt)
-summary(m.gamma.kss_age)
-m.gamma.shift_kss_age <- lmer(gamma ~ shift + kss + age + shift:kss + kss:age + shift:age + (1 | participant), data = para_dt)
-summary(m.gamma.shift_kss_age)
-m.gamma.sp_age <- lmer(gamma ~ sp + age + sp:age + (1 | participant), data = para_dt)
-summary(m.gamma.sp_age)
-m.gamma.shift_sp_age <- lmer(gamma ~ shift + sp + age + shift:sp + shift:age + sp:age + (1 | participant), data = para_dt)
-summary(m.gamma.shift_sp_age)
 
 #tau - behavioral consistency
 m.tau.shift <- lmer(tau ~ shift + (1 | participant), data = para_dt)
@@ -295,6 +262,65 @@ summary(m.tau.sa_mot)
 m.tau.rxnt <- lmer(tau ~ avg_rxn_time + (1 | participant), data = para_dt)
 summary(m.tau.rxnt)
 
+####LMM - controlling for Age
+#phi
+m.phi.shift_age <- lmer(phi ~ shift + age + shift:age + (1 | participant), data = para_dt)
+summary(m.phi.shift_age)
+m.phi.dn_age <- lmer(phi ~ d_n + age + d_n:age + (1 | participant), data = para_dt)
+summary(m.phi.dn_age)
+m.phi.activity_age <- lmer(phi ~ activity + age + activity:age + (1 | participant), data = para_dt)
+summary(m.phi.activity_age)
+m.phi.shift_act_age <- lmer(phi ~ shift + activity + age + shift:activity + shift:age + age:activity + (1 | participant), data = para_dt)
+summary(m.phi.shift_act_age)
+
+m.phi.kss_age <- lmer(phi ~ kss + age + kss:age + (1 | participant), data = para_dt)
+summary(m.phi.kss_age)
+m.phi.shift_kss_age <- lmer(phi ~ shift + kss + age + shift:kss + kss:age + shift:age + (1 | participant), data = para_dt)
+summary(m.phi.shift_kss_age)
+m.phi.sp_age <- lmer(phi ~ sp + age + sp:age + (1 | participant), data = para_dt)
+summary(m.phi.sp_age)
+m.phi.shift_sp_age <- lmer(phi ~ shift + sp + age + shift:sp + shift:age + age:sp + (1 | participant), data = para_dt)
+summary(m.phi.shift_sp_age)
+
+#eta
+m.eta.shift_age <- lmer(eta ~ shift + age + shift:age + (1 | participant), data = para_dt)
+summary(m.eta.shift_age)
+m.eta.dn_age <- lmer(eta ~ d_n + age + d_n:age + (1 | participant), data = para_dt)
+summary(m.eta.dn_age)
+m.eta.activity_age <- lmer(eta ~ activity + age + activity:age + (1 | participant), data = para_dt)
+summary(m.eta.activity_age)
+m.eta.shift_act_age <- lmer(eta ~ shift + activity + age + shift:activity + age:activity + shift:age + (1 | participant), data = para_dt)
+summary(m.eta.shift_act_age)
+
+m.eta.kss_age <- lmer(eta ~ kss + age + kss:age + (1 | participant), data = para_dt)
+summary(m.eta.kss_age)
+m.eta.shift_kss_age <- lmer(eta ~ shift + kss + age + shift:kss + kss:age + shift:age + (1 | participant), data = para_dt)
+summary(m.eta.shift_kss_age)
+m.eta.sp_age <- lmer(eta ~ sp + age + sp:age + (1 | participant), data = para_dt)
+summary(m.eta.sp_age)
+m.eta.shift_sp_age <- lmer(eta ~ shift + sp + age + shift:sp + shift:age + sp:age + (1 | participant), data = para_dt)
+summary(m.eta.shift_sp_age)
+
+#gamma
+m.gamma.shift_age <- lmer(gamma ~ shift + age + shift:age + (1 | participant), data = para_dt)
+summary(m.gamma.shift_age)
+m.gamma.dn_age <- lmer(gamma ~ d_n + age + d_n:age + (1 | participant), data = para_dt)
+summary(m.gamma.dn_age)
+m.gamma.activity_age <- lmer(gamma ~ activity + age + activity:age + (1 | participant), data = para_dt)
+summary(m.gamma.activity_age)
+m.gamma.shift_act_age <- lmer(gamma ~ shift + activity + age + shift:activity + age:activity + shift:age + (1 | participant), data = para_dt)
+summary(m.gamma.shift_act_age)
+
+m.gamma.kss_age <- lmer(gamma ~ kss + age + kss:age + (1 | participant), data = para_dt)
+summary(m.gamma.kss_age)
+m.gamma.shift_kss_age <- lmer(gamma ~ shift + kss + age + shift:kss + kss:age + shift:age + (1 | participant), data = para_dt)
+summary(m.gamma.shift_kss_age)
+m.gamma.sp_age <- lmer(gamma ~ sp + age + sp:age + (1 | participant), data = para_dt)
+summary(m.gamma.sp_age)
+m.gamma.shift_sp_age <- lmer(gamma ~ shift + sp + age + shift:sp + shift:age + sp:age + (1 | participant), data = para_dt)
+summary(m.gamma.shift_sp_age)
+
+#tau
 m.tau.shift_age <- lmer(tau ~ shift + age + shift:age + (1 | participant), data = para_dt)
 summary(m.tau.shift_age)
 m.tau.dn_age <- lmer(tau ~ d_n + age + d_n:age + (1 | participant), data = para_dt)
@@ -312,3 +338,697 @@ m.tau.sp_age <- lmer(tau ~ sp + age + sp:age + (1 | participant), data = para_dt
 summary(m.tau.sp_age)
 m.tau.shift_sp_age <- lmer(tau ~ shift + sp + age + shift:sp + shift:age + sp:age + (1 | participant), data = para_dt)
 summary(m.tau.shift_sp_age)
+
+####LMM - controlling for SEX
+#phi
+m.phi.shift_sex <- lmer(phi ~ shift + sex + shift:sex + (1 | participant), data = para_dt)
+summary(m.phi.shift_sex)
+m.phi.dn_sex <- lmer(phi ~ d_n + sex + d_n:sex + (1 | participant), data = para_dt)
+summary(m.phi.dn_sex)
+m.phi.activity_sex <- lmer(phi ~ activity + sex + activity:sex + (1 | participant), data = para_dt)
+summary(m.phi.activity_sex)
+m.phi.shift_act_sex <- lmer(phi ~ shift + activity + sex + shift:activity + shift:sex + sex:activity + (1 | participant), data = para_dt)
+summary(m.phi.shift_act_sex)
+
+m.phi.kss_sex <- lmer(phi ~ kss + sex + kss:sex + (1 | participant), data = para_dt)
+summary(m.phi.kss_sex)
+m.phi.shift_kss_sex <- lmer(phi ~ shift + kss + sex + shift:kss + kss:sex + shift:sex + (1 | participant), data = para_dt)
+summary(m.phi.shift_kss_sex)
+m.phi.sp_sex <- lmer(phi ~ sp + sex + sp:sex + (1 | participant), data = para_dt)
+summary(m.phi.sp_sex)
+m.phi.shift_sp_sex <- lmer(phi ~ shift + sp + sex + shift:sp + shift:sex + sex:sp + (1 | participant), data = para_dt)
+summary(m.phi.shift_sp_sex)
+
+#eta
+m.eta.shift_sex <- lmer(eta ~ shift + sex + shift:sex + (1 | participant), data = para_dt)
+summary(m.eta.shift_sex)
+m.eta.dn_sex <- lmer(eta ~ d_n + sex + d_n:sex + (1 | participant), data = para_dt)
+summary(m.eta.dn_sex)
+m.eta.activity_sex <- lmer(eta ~ activity + sex + activity:sex + (1 | participant), data = para_dt)
+summary(m.eta.activity_sex)
+m.eta.shift_act_sex <- lmer(eta ~ shift + activity + sex + shift:activity + sex:activity + shift:sex + (1 | participant), data = para_dt)
+summary(m.eta.shift_act_sex)
+
+m.eta.kss_sex <- lmer(eta ~ kss + sex + kss:sex + (1 | participant), data = para_dt)
+summary(m.eta.kss_sex)
+m.eta.shift_kss_sex <- lmer(eta ~ shift + kss + sex + shift:kss + kss:sex + shift:sex + (1 | participant), data = para_dt)
+summary(m.eta.shift_kss_sex)
+m.eta.sp_sex <- lmer(eta ~ sp + sex + sp:sex + (1 | participant), data = para_dt)
+summary(m.eta.sp_sex)
+m.eta.shift_sp_sex <- lmer(eta ~ shift + sp + sex + shift:sp + shift:sex + sp:sex + (1 | participant), data = para_dt)
+summary(m.eta.shift_sp_sex)
+
+#gamma
+m.gamma.shift_sex <- lmer(gamma ~ shift + sex + shift:sex + (1 | participant), data = para_dt)
+summary(m.gamma.shift_sex)
+m.gamma.dn_sex <- lmer(gamma ~ d_n + sex + d_n:sex + (1 | participant), data = para_dt)
+summary(m.gamma.dn_sex)
+m.gamma.activity_sex <- lmer(gamma ~ activity + sex + activity:sex + (1 | participant), data = para_dt)
+summary(m.gamma.activity_sex)
+m.gamma.shift_act_sex <- lmer(gamma ~ shift + activity + sex + shift:activity + sex:activity + shift:sex + (1 | participant), data = para_dt)
+summary(m.gamma.shift_act_sex)
+
+m.gamma.kss_sex <- lmer(gamma ~ kss + sex + kss:sex + (1 | participant), data = para_dt)
+summary(m.gamma.kss_sex)
+m.gamma.shift_kss_sex <- lmer(gamma ~ shift + kss + sex + shift:kss + kss:sex + shift:sex + (1 | participant), data = para_dt)
+summary(m.gamma.shift_kss_sex)
+m.gamma.sp_sex <- lmer(gamma ~ sp + sex + sp:sex + (1 | participant), data = para_dt)
+summary(m.gamma.sp_sex)
+m.gamma.shift_sp_sex <- lmer(gamma ~ shift + sp + sex + shift:sp + shift:sex + sp:sex + (1 | participant), data = para_dt)
+summary(m.gamma.shift_sp_sex)
+
+#tau
+m.tau.shift_sex <- lmer(tau ~ shift + sex + shift:sex + (1 | participant), data = para_dt)
+summary(m.tau.shift_sex)
+m.tau.dn_sex <- lmer(tau ~ d_n + sex + d_n:sex + (1 | participant), data = para_dt)
+summary(m.tau.dn_sex)
+m.tau.activity_sex <- lmer(tau ~ activity + sex + activity:sex + (1 | participant), data = para_dt)
+summary(m.tau.activity_sex)
+m.tau.shift_act_sex <- lmer(tau ~ shift + activity + sex + shift:activity + sex:activity + shift:sex + (1 | participant), data = para_dt)
+summary(m.tau.shift_act_sex)
+
+m.tau.kss_sex <- lmer(tau ~ kss + sex + kss:sex + (1 | participant), data = para_dt)
+summary(m.tau.kss_sex)
+m.tau.shift_kss_sex <- lmer(tau ~ shift + kss + sex + shift:kss + kss:sex + shift:sex + (1 | participant), data = para_dt)
+summary(m.tau.shift_kss_sex)
+m.tau.sp_sex <- lmer(tau ~ sp + sex + sp:sex + (1 | participant), data = para_dt)
+summary(m.tau.sp_sex)
+m.tau.shift_sp_sex <- lmer(tau ~ shift + sp + sex + shift:sp + shift:sex + sp:sex + (1 | participant), data = para_dt)
+summary(m.tau.shift_sp_sex)
+
+####LMM - controlling for months_experience
+#phi
+m.phi.shift_months_experience <- lmer(phi ~ shift + months_experience + shift:months_experience + (1 | participant), data = para_dt)
+summary(m.phi.shift_months_experience)
+m.phi.dn_months_experience <- lmer(phi ~ d_n + months_experience + d_n:months_experience + (1 | participant), data = para_dt)
+summary(m.phi.dn_months_experience)
+m.phi.activity_months_experience <- lmer(phi ~ activity + months_experience + activity:months_experience + (1 | participant), data = para_dt)
+summary(m.phi.activity_months_experience)
+m.phi.shift_act_months_experience <- lmer(phi ~ shift + activity + months_experience + shift:activity + shift:months_experience + months_experience:activity + (1 | participant), data = para_dt)
+summary(m.phi.shift_act_months_experience)
+
+m.phi.kss_months_experience <- lmer(phi ~ kss + months_experience + kss:months_experience + (1 | participant), data = para_dt)
+summary(m.phi.kss_months_experience)
+m.phi.shift_kss_months_experience <- lmer(phi ~ shift + kss + months_experience + shift:kss + kss:months_experience + shift:months_experience + (1 | participant), data = para_dt)
+summary(m.phi.shift_kss_months_experience)
+m.phi.sp_months_experience <- lmer(phi ~ sp + months_experience + sp:months_experience + (1 | participant), data = para_dt)
+summary(m.phi.sp_months_experience)
+m.phi.shift_sp_months_experience <- lmer(phi ~ shift + sp + months_experience + shift:sp + shift:months_experience + months_experience:sp + (1 | participant), data = para_dt)
+summary(m.phi.shift_sp_months_experience)
+
+#eta
+m.eta.shift_months_experience <- lmer(eta ~ shift + months_experience + shift:months_experience + (1 | participant), data = para_dt)
+summary(m.eta.shift_months_experience)
+m.eta.dn_months_experience <- lmer(eta ~ d_n + months_experience + d_n:months_experience + (1 | participant), data = para_dt)
+summary(m.eta.dn_months_experience)
+m.eta.activity_months_experience <- lmer(eta ~ activity + months_experience + activity:months_experience + (1 | participant), data = para_dt)
+summary(m.eta.activity_months_experience)
+m.eta.shift_act_months_experience <- lmer(eta ~ shift + activity + months_experience + shift:activity + months_experience:activity + shift:months_experience + (1 | participant), data = para_dt)
+summary(m.eta.shift_act_months_experience)
+
+m.eta.kss_months_experience <- lmer(eta ~ kss + months_experience + kss:months_experience + (1 | participant), data = para_dt)
+summary(m.eta.kss_months_experience)
+m.eta.shift_kss_months_experience <- lmer(eta ~ shift + kss + months_experience + shift:kss + kss:months_experience + shift:months_experience + (1 | participant), data = para_dt)
+summary(m.eta.shift_kss_months_experience)
+m.eta.sp_months_experience <- lmer(eta ~ sp + months_experience + sp:months_experience + (1 | participant), data = para_dt)
+summary(m.eta.sp_months_experience)
+m.eta.shift_sp_months_experience <- lmer(eta ~ shift + sp + months_experience + shift:sp + shift:months_experience + sp:months_experience + (1 | participant), data = para_dt)
+summary(m.eta.shift_sp_months_experience)
+
+#gamma
+m.gamma.shift_months_experience <- lmer(gamma ~ shift + months_experience + shift:months_experience + (1 | participant), data = para_dt)
+summary(m.gamma.shift_months_experience)
+m.gamma.dn_months_experience <- lmer(gamma ~ d_n + months_experience + d_n:months_experience + (1 | participant), data = para_dt)
+summary(m.gamma.dn_months_experience)
+m.gamma.activity_months_experience <- lmer(gamma ~ activity + months_experience + activity:months_experience + (1 | participant), data = para_dt)
+summary(m.gamma.activity_months_experience)
+m.gamma.shift_act_months_experience <- lmer(gamma ~ shift + activity + months_experience + shift:activity + months_experience:activity + shift:months_experience + (1 | participant), data = para_dt)
+summary(m.gamma.shift_act_months_experience)
+
+m.gamma.kss_months_experience <- lmer(gamma ~ kss + months_experience + kss:months_experience + (1 | participant), data = para_dt)
+summary(m.gamma.kss_months_experience)
+m.gamma.shift_kss_months_experience <- lmer(gamma ~ shift + kss + months_experience + shift:kss + kss:months_experience + shift:months_experience + (1 | participant), data = para_dt)
+summary(m.gamma.shift_kss_months_experience)
+m.gamma.sp_months_experience <- lmer(gamma ~ sp + months_experience + sp:months_experience + (1 | participant), data = para_dt)
+summary(m.gamma.sp_months_experience)
+m.gamma.shift_sp_months_experience <- lmer(gamma ~ shift + sp + months_experience + shift:sp + shift:months_experience + sp:months_experience + (1 | participant), data = para_dt)
+summary(m.gamma.shift_sp_months_experience)
+
+#tau
+m.tau.shift_months_experience <- lmer(tau ~ shift + months_experience + shift:months_experience + (1 | participant), data = para_dt)
+summary(m.tau.shift_months_experience)
+m.tau.dn_months_experience <- lmer(tau ~ d_n + months_experience + d_n:months_experience + (1 | participant), data = para_dt)
+summary(m.tau.dn_months_experience)
+m.tau.activity_months_experience <- lmer(tau ~ activity + months_experience + activity:months_experience + (1 | participant), data = para_dt)
+summary(m.tau.activity_months_experience)
+m.tau.shift_act_months_experience <- lmer(tau ~ shift + activity + months_experience + shift:activity + months_experience:activity + shift:months_experience + (1 | participant), data = para_dt)
+summary(m.tau.shift_act_months_experience)
+
+m.tau.kss_months_experience <- lmer(tau ~ kss + months_experience + kss:months_experience + (1 | participant), data = para_dt)
+summary(m.tau.kss_months_experience)
+m.tau.shift_kss_months_experience <- lmer(tau ~ shift + kss + months_experience + shift:kss + kss:months_experience + shift:months_experience + (1 | participant), data = para_dt)
+summary(m.tau.shift_kss_months_experience)
+m.tau.sp_months_experience <- lmer(tau ~ sp + months_experience + sp:months_experience + (1 | participant), data = para_dt)
+summary(m.tau.sp_months_experience)
+m.tau.shift_sp_months_experience <- lmer(tau ~ shift + sp + months_experience + shift:sp + shift:months_experience + sp:months_experience + (1 | participant), data = para_dt)
+summary(m.tau.shift_sp_months_experience)
+
+####LMM - controlling for service
+#phi
+m.phi.shift_service <- lmer(phi ~ shift + service + shift:service + (1 | participant), data = para_dt)
+summary(m.phi.shift_service)
+m.phi.dn_service <- lmer(phi ~ d_n + service + d_n:service + (1 | participant), data = para_dt)
+summary(m.phi.dn_service)
+m.phi.activity_service <- lmer(phi ~ activity + service + activity:service + (1 | participant), data = para_dt)
+summary(m.phi.activity_service)
+m.phi.shift_act_service <- lmer(phi ~ shift + activity + service + shift:activity + shift:service + service:activity + (1 | participant), data = para_dt)
+summary(m.phi.shift_act_service)
+
+m.phi.kss_service <- lmer(phi ~ kss + service + kss:service + (1 | participant), data = para_dt)
+summary(m.phi.kss_service)
+m.phi.shift_kss_service <- lmer(phi ~ shift + kss + service + shift:kss + kss:service + shift:service + (1 | participant), data = para_dt)
+summary(m.phi.shift_kss_service)
+m.phi.sp_service <- lmer(phi ~ sp + service + sp:service + (1 | participant), data = para_dt)
+summary(m.phi.sp_service)
+m.phi.shift_sp_service <- lmer(phi ~ shift + sp + service + shift:sp + shift:service + service:sp + (1 | participant), data = para_dt)
+summary(m.phi.shift_sp_service)
+
+#eta
+m.eta.shift_service <- lmer(eta ~ shift + service + shift:service + (1 | participant), data = para_dt)
+summary(m.eta.shift_service)
+m.eta.dn_service <- lmer(eta ~ d_n + service + d_n:service + (1 | participant), data = para_dt)
+summary(m.eta.dn_service)
+m.eta.activity_service <- lmer(eta ~ activity + service + activity:service + (1 | participant), data = para_dt)
+summary(m.eta.activity_service)
+m.eta.shift_act_service <- lmer(eta ~ shift + activity + service + shift:activity + service:activity + shift:service + (1 | participant), data = para_dt)
+summary(m.eta.shift_act_service)
+
+m.eta.kss_service <- lmer(eta ~ kss + service + kss:service + (1 | participant), data = para_dt)
+summary(m.eta.kss_service)
+m.eta.shift_kss_service <- lmer(eta ~ shift + kss + service + shift:kss + kss:service + shift:service + (1 | participant), data = para_dt)
+summary(m.eta.shift_kss_service)
+m.eta.sp_service <- lmer(eta ~ sp + service + sp:service + (1 | participant), data = para_dt)
+summary(m.eta.sp_service)
+m.eta.shift_sp_service <- lmer(eta ~ shift + sp + service + shift:sp + shift:service + sp:service + (1 | participant), data = para_dt)
+summary(m.eta.shift_sp_service)
+
+#gamma
+m.gamma.shift_service <- lmer(gamma ~ shift + service + shift:service + (1 | participant), data = para_dt)
+summary(m.gamma.shift_service)
+m.gamma.dn_service <- lmer(gamma ~ d_n + service + d_n:service + (1 | participant), data = para_dt)
+summary(m.gamma.dn_service)
+m.gamma.activity_service <- lmer(gamma ~ activity + service + activity:service + (1 | participant), data = para_dt)
+summary(m.gamma.activity_service)
+m.gamma.shift_act_service <- lmer(gamma ~ shift + activity + service + shift:activity + service:activity + shift:service + (1 | participant), data = para_dt)
+summary(m.gamma.shift_act_service)
+
+m.gamma.kss_service <- lmer(gamma ~ kss + service + kss:service + (1 | participant), data = para_dt)
+summary(m.gamma.kss_service)
+m.gamma.shift_kss_service <- lmer(gamma ~ shift + kss + service + shift:kss + kss:service + shift:service + (1 | participant), data = para_dt)
+summary(m.gamma.shift_kss_service)
+m.gamma.sp_service <- lmer(gamma ~ sp + service + sp:service + (1 | participant), data = para_dt)
+summary(m.gamma.sp_service)
+m.gamma.shift_sp_service <- lmer(gamma ~ shift + sp + service + shift:sp + shift:service + sp:service + (1 | participant), data = para_dt)
+summary(m.gamma.shift_sp_service)
+
+#tau
+m.tau.shift_service <- lmer(tau ~ shift + service + shift:service + (1 | participant), data = para_dt)
+summary(m.tau.shift_service)
+m.tau.dn_service <- lmer(tau ~ d_n + service + d_n:service + (1 | participant), data = para_dt)
+summary(m.tau.dn_service)
+m.tau.activity_service <- lmer(tau ~ activity + service + activity:service + (1 | participant), data = para_dt)
+summary(m.tau.activity_service)
+m.tau.shift_act_service <- lmer(tau ~ shift + activity + service + shift:activity + service:activity + shift:service + (1 | participant), data = para_dt)
+summary(m.tau.shift_act_service)
+
+m.tau.kss_service <- lmer(tau ~ kss + service + kss:service + (1 | participant), data = para_dt)
+summary(m.tau.kss_service)
+m.tau.shift_kss_service <- lmer(tau ~ shift + kss + service + shift:kss + kss:service + shift:service + (1 | participant), data = para_dt)
+summary(m.tau.shift_kss_service)
+m.tau.sp_service <- lmer(tau ~ sp + service + sp:service + (1 | participant), data = para_dt)
+summary(m.tau.sp_service)
+m.tau.shift_sp_service <- lmer(tau ~ shift + sp + service + shift:sp + shift:service + sp:service + (1 | participant), data = para_dt)
+summary(m.tau.shift_sp_service)
+
+####LMM - controlling for bai_score
+#phi
+m.phi.shift_bai_score <- lmer(phi ~ shift + bai_score + shift:bai_score + (1 | participant), data = para_dt)
+summary(m.phi.shift_bai_score)
+m.phi.dn_bai_score <- lmer(phi ~ d_n + bai_score + d_n:bai_score + (1 | participant), data = para_dt)
+summary(m.phi.dn_bai_score)
+m.phi.activity_bai_score <- lmer(phi ~ activity + bai_score + activity:bai_score + (1 | participant), data = para_dt)
+summary(m.phi.activity_bai_score)
+m.phi.shift_act_bai_score <- lmer(phi ~ shift + activity + bai_score + shift:activity + shift:bai_score + bai_score:activity + (1 | participant), data = para_dt)
+summary(m.phi.shift_act_bai_score)
+
+m.phi.kss_bai_score <- lmer(phi ~ kss + bai_score + kss:bai_score + (1 | participant), data = para_dt)
+summary(m.phi.kss_bai_score)
+m.phi.shift_kss_bai_score <- lmer(phi ~ shift + kss + bai_score + shift:kss + kss:bai_score + shift:bai_score + (1 | participant), data = para_dt)
+summary(m.phi.shift_kss_bai_score)
+m.phi.sp_bai_score <- lmer(phi ~ sp + bai_score + sp:bai_score + (1 | participant), data = para_dt)
+summary(m.phi.sp_bai_score)
+m.phi.shift_sp_bai_score <- lmer(phi ~ shift + sp + bai_score + shift:sp + shift:bai_score + bai_score:sp + (1 | participant), data = para_dt)
+summary(m.phi.shift_sp_bai_score)
+
+#eta
+m.eta.shift_bai_score <- lmer(eta ~ shift + bai_score + shift:bai_score + (1 | participant), data = para_dt)
+summary(m.eta.shift_bai_score)
+m.eta.dn_bai_score <- lmer(eta ~ d_n + bai_score + d_n:bai_score + (1 | participant), data = para_dt)
+summary(m.eta.dn_bai_score)
+m.eta.activity_bai_score <- lmer(eta ~ activity + bai_score + activity:bai_score + (1 | participant), data = para_dt)
+summary(m.eta.activity_bai_score)
+m.eta.shift_act_bai_score <- lmer(eta ~ shift + activity + bai_score + shift:activity + bai_score:activity + shift:bai_score + (1 | participant), data = para_dt)
+summary(m.eta.shift_act_bai_score)
+
+m.eta.kss_bai_score <- lmer(eta ~ kss + bai_score + kss:bai_score + (1 | participant), data = para_dt)
+summary(m.eta.kss_bai_score)
+m.eta.shift_kss_bai_score <- lmer(eta ~ shift + kss + bai_score + shift:kss + kss:bai_score + shift:bai_score + (1 | participant), data = para_dt)
+summary(m.eta.shift_kss_bai_score)
+m.eta.sp_bai_score <- lmer(eta ~ sp + bai_score + sp:bai_score + (1 | participant), data = para_dt)
+summary(m.eta.sp_bai_score)
+m.eta.shift_sp_bai_score <- lmer(eta ~ shift + sp + bai_score + shift:sp + shift:bai_score + sp:bai_score + (1 | participant), data = para_dt)
+summary(m.eta.shift_sp_bai_score)
+
+#gamma
+m.gamma.shift_bai_score <- lmer(gamma ~ shift + bai_score + shift:bai_score + (1 | participant), data = para_dt)
+summary(m.gamma.shift_bai_score)
+m.gamma.dn_bai_score <- lmer(gamma ~ d_n + bai_score + d_n:bai_score + (1 | participant), data = para_dt)
+summary(m.gamma.dn_bai_score)
+m.gamma.activity_bai_score <- lmer(gamma ~ activity + bai_score + activity:bai_score + (1 | participant), data = para_dt)
+summary(m.gamma.activity_bai_score)
+m.gamma.shift_act_bai_score <- lmer(gamma ~ shift + activity + bai_score + shift:activity + bai_score:activity + shift:bai_score + (1 | participant), data = para_dt)
+summary(m.gamma.shift_act_bai_score)
+
+m.gamma.kss_bai_score <- lmer(gamma ~ kss + bai_score + kss:bai_score + (1 | participant), data = para_dt)
+summary(m.gamma.kss_bai_score)
+m.gamma.shift_kss_bai_score <- lmer(gamma ~ shift + kss + bai_score + shift:kss + kss:bai_score + shift:bai_score + (1 | participant), data = para_dt)
+summary(m.gamma.shift_kss_bai_score)
+m.gamma.sp_bai_score <- lmer(gamma ~ sp + bai_score + sp:bai_score + (1 | participant), data = para_dt)
+summary(m.gamma.sp_bai_score)
+m.gamma.shift_sp_bai_score <- lmer(gamma ~ shift + sp + bai_score + shift:sp + shift:bai_score + sp:bai_score + (1 | participant), data = para_dt)
+summary(m.gamma.shift_sp_bai_score)
+
+#tau
+m.tau.shift_bai_score <- lmer(tau ~ shift + bai_score + shift:bai_score + (1 | participant), data = para_dt)
+summary(m.tau.shift_bai_score)
+m.tau.dn_bai_score <- lmer(tau ~ d_n + bai_score + d_n:bai_score + (1 | participant), data = para_dt)
+summary(m.tau.dn_bai_score)
+m.tau.activity_bai_score <- lmer(tau ~ activity + bai_score + activity:bai_score + (1 | participant), data = para_dt)
+summary(m.tau.activity_bai_score)
+m.tau.shift_act_bai_score <- lmer(tau ~ shift + activity + bai_score + shift:activity + bai_score:activity + shift:bai_score + (1 | participant), data = para_dt)
+summary(m.tau.shift_act_bai_score)
+
+m.tau.kss_bai_score <- lmer(tau ~ kss + bai_score + kss:bai_score + (1 | participant), data = para_dt)
+summary(m.tau.kss_bai_score)
+m.tau.shift_kss_bai_score <- lmer(tau ~ shift + kss + bai_score + shift:kss + kss:bai_score + shift:bai_score + (1 | participant), data = para_dt)
+summary(m.tau.shift_kss_bai_score)
+m.tau.sp_bai_score <- lmer(tau ~ sp + bai_score + sp:bai_score + (1 | participant), data = para_dt)
+summary(m.tau.sp_bai_score)
+m.tau.shift_sp_bai_score <- lmer(tau ~ shift + sp + bai_score + shift:sp + shift:bai_score + sp:bai_score + (1 | participant), data = para_dt)
+summary(m.tau.shift_sp_bai_score)
+
+####LMM - controlling for emscsq_total
+#phi
+m.phi.shift_emscsq_total <- lmer(phi ~ shift + emscsq_total + shift:emscsq_total + (1 | participant), data = para_dt)
+summary(m.phi.shift_emscsq_total)
+m.phi.dn_emscsq_total <- lmer(phi ~ d_n + emscsq_total + d_n:emscsq_total + (1 | participant), data = para_dt)
+summary(m.phi.dn_emscsq_total)
+m.phi.activity_emscsq_total <- lmer(phi ~ activity + emscsq_total + activity:emscsq_total + (1 | participant), data = para_dt)
+summary(m.phi.activity_emscsq_total)
+m.phi.shift_act_emscsq_total <- lmer(phi ~ shift + activity + emscsq_total + shift:activity + shift:emscsq_total + emscsq_total:activity + (1 | participant), data = para_dt)
+summary(m.phi.shift_act_emscsq_total)
+
+m.phi.kss_emscsq_total <- lmer(phi ~ kss + emscsq_total + kss:emscsq_total + (1 | participant), data = para_dt)
+summary(m.phi.kss_emscsq_total)
+m.phi.shift_kss_emscsq_total <- lmer(phi ~ shift + kss + emscsq_total + shift:kss + kss:emscsq_total + shift:emscsq_total + (1 | participant), data = para_dt)
+summary(m.phi.shift_kss_emscsq_total)
+m.phi.sp_emscsq_total <- lmer(phi ~ sp + emscsq_total + sp:emscsq_total + (1 | participant), data = para_dt)
+summary(m.phi.sp_emscsq_total)
+m.phi.shift_sp_emscsq_total <- lmer(phi ~ shift + sp + emscsq_total + shift:sp + shift:emscsq_total + emscsq_total:sp + (1 | participant), data = para_dt)
+summary(m.phi.shift_sp_emscsq_total)
+
+#eta
+m.eta.shift_emscsq_total <- lmer(eta ~ shift + emscsq_total + shift:emscsq_total + (1 | participant), data = para_dt)
+summary(m.eta.shift_emscsq_total)
+m.eta.dn_emscsq_total <- lmer(eta ~ d_n + emscsq_total + d_n:emscsq_total + (1 | participant), data = para_dt)
+summary(m.eta.dn_emscsq_total)
+m.eta.activity_emscsq_total <- lmer(eta ~ activity + emscsq_total + activity:emscsq_total + (1 | participant), data = para_dt)
+summary(m.eta.activity_emscsq_total)
+m.eta.shift_act_emscsq_total <- lmer(eta ~ shift + activity + emscsq_total + shift:activity + emscsq_total:activity + shift:emscsq_total + (1 | participant), data = para_dt)
+summary(m.eta.shift_act_emscsq_total)
+
+m.eta.kss_emscsq_total <- lmer(eta ~ kss + emscsq_total + kss:emscsq_total + (1 | participant), data = para_dt)
+summary(m.eta.kss_emscsq_total)
+m.eta.shift_kss_emscsq_total <- lmer(eta ~ shift + kss + emscsq_total + shift:kss + kss:emscsq_total + shift:emscsq_total + (1 | participant), data = para_dt)
+summary(m.eta.shift_kss_emscsq_total)
+m.eta.sp_emscsq_total <- lmer(eta ~ sp + emscsq_total + sp:emscsq_total + (1 | participant), data = para_dt)
+summary(m.eta.sp_emscsq_total)
+m.eta.shift_sp_emscsq_total <- lmer(eta ~ shift + sp + emscsq_total + shift:sp + shift:emscsq_total + sp:emscsq_total + (1 | participant), data = para_dt)
+summary(m.eta.shift_sp_emscsq_total)
+
+#gamma
+m.gamma.shift_emscsq_total <- lmer(gamma ~ shift + emscsq_total + shift:emscsq_total + (1 | participant), data = para_dt)
+summary(m.gamma.shift_emscsq_total)
+m.gamma.dn_emscsq_total <- lmer(gamma ~ d_n + emscsq_total + d_n:emscsq_total + (1 | participant), data = para_dt)
+summary(m.gamma.dn_emscsq_total)
+m.gamma.activity_emscsq_total <- lmer(gamma ~ activity + emscsq_total + activity:emscsq_total + (1 | participant), data = para_dt)
+summary(m.gamma.activity_emscsq_total)
+m.gamma.shift_act_emscsq_total <- lmer(gamma ~ shift + activity + emscsq_total + shift:activity + emscsq_total:activity + shift:emscsq_total + (1 | participant), data = para_dt)
+summary(m.gamma.shift_act_emscsq_total)
+
+m.gamma.kss_emscsq_total <- lmer(gamma ~ kss + emscsq_total + kss:emscsq_total + (1 | participant), data = para_dt)
+summary(m.gamma.kss_emscsq_total)
+m.gamma.shift_kss_emscsq_total <- lmer(gamma ~ shift + kss + emscsq_total + shift:kss + kss:emscsq_total + shift:emscsq_total + (1 | participant), data = para_dt)
+summary(m.gamma.shift_kss_emscsq_total)
+m.gamma.sp_emscsq_total <- lmer(gamma ~ sp + emscsq_total + sp:emscsq_total + (1 | participant), data = para_dt)
+summary(m.gamma.sp_emscsq_total)
+m.gamma.shift_sp_emscsq_total <- lmer(gamma ~ shift + sp + emscsq_total + shift:sp + shift:emscsq_total + sp:emscsq_total + (1 | participant), data = para_dt)
+summary(m.gamma.shift_sp_emscsq_total)
+
+#tau
+m.tau.shift_emscsq_total <- lmer(tau ~ shift + emscsq_total + shift:emscsq_total + (1 | participant), data = para_dt)
+summary(m.tau.shift_emscsq_total)
+m.tau.dn_emscsq_total <- lmer(tau ~ d_n + emscsq_total + d_n:emscsq_total + (1 | participant), data = para_dt)
+summary(m.tau.dn_emscsq_total)
+m.tau.activity_emscsq_total <- lmer(tau ~ activity + emscsq_total + activity:emscsq_total + (1 | participant), data = para_dt)
+summary(m.tau.activity_emscsq_total)
+m.tau.shift_act_emscsq_total <- lmer(tau ~ shift + activity + emscsq_total + shift:activity + emscsq_total:activity + shift:emscsq_total + (1 | participant), data = para_dt)
+summary(m.tau.shift_act_emscsq_total)
+
+m.tau.kss_emscsq_total <- lmer(tau ~ kss + emscsq_total + kss:emscsq_total + (1 | participant), data = para_dt)
+summary(m.tau.kss_emscsq_total)
+m.tau.shift_kss_emscsq_total <- lmer(tau ~ shift + kss + emscsq_total + shift:kss + kss:emscsq_total + shift:emscsq_total + (1 | participant), data = para_dt)
+summary(m.tau.shift_kss_emscsq_total)
+m.tau.sp_emscsq_total <- lmer(tau ~ sp + emscsq_total + sp:emscsq_total + (1 | participant), data = para_dt)
+summary(m.tau.sp_emscsq_total)
+m.tau.shift_sp_emscsq_total <- lmer(tau ~ shift + sp + emscsq_total + shift:sp + shift:emscsq_total + sp:emscsq_total + (1 | participant), data = para_dt)
+summary(m.tau.shift_sp_emscsq_total)
+
+####LMM - controlling for audit_score
+#phi
+m.phi.shift_audit_score <- lmer(phi ~ shift + audit_score + shift:audit_score + (1 | participant), data = para_dt)
+summary(m.phi.shift_audit_score)
+m.phi.dn_audit_score <- lmer(phi ~ d_n + audit_score + d_n:audit_score + (1 | participant), data = para_dt)
+summary(m.phi.dn_audit_score)
+m.phi.activity_audit_score <- lmer(phi ~ activity + audit_score + activity:audit_score + (1 | participant), data = para_dt)
+summary(m.phi.activity_audit_score)
+m.phi.shift_act_audit_score <- lmer(phi ~ shift + activity + audit_score + shift:activity + shift:audit_score + audit_score:activity + (1 | participant), data = para_dt)
+summary(m.phi.shift_act_audit_score)
+
+m.phi.kss_audit_score <- lmer(phi ~ kss + audit_score + kss:audit_score + (1 | participant), data = para_dt)
+summary(m.phi.kss_audit_score)
+m.phi.shift_kss_audit_score <- lmer(phi ~ shift + kss + audit_score + shift:kss + kss:audit_score + shift:audit_score + (1 | participant), data = para_dt)
+summary(m.phi.shift_kss_audit_score)
+m.phi.sp_audit_score <- lmer(phi ~ sp + audit_score + sp:audit_score + (1 | participant), data = para_dt)
+summary(m.phi.sp_audit_score)
+m.phi.shift_sp_audit_score <- lmer(phi ~ shift + sp + audit_score + shift:sp + shift:audit_score + audit_score:sp + (1 | participant), data = para_dt)
+summary(m.phi.shift_sp_audit_score)
+
+#eta
+m.eta.shift_audit_score <- lmer(eta ~ shift + audit_score + shift:audit_score + (1 | participant), data = para_dt)
+summary(m.eta.shift_audit_score)
+m.eta.dn_audit_score <- lmer(eta ~ d_n + audit_score + d_n:audit_score + (1 | participant), data = para_dt)
+summary(m.eta.dn_audit_score)
+m.eta.activity_audit_score <- lmer(eta ~ activity + audit_score + activity:audit_score + (1 | participant), data = para_dt)
+summary(m.eta.activity_audit_score)
+m.eta.shift_act_audit_score <- lmer(eta ~ shift + activity + audit_score + shift:activity + audit_score:activity + shift:audit_score + (1 | participant), data = para_dt)
+summary(m.eta.shift_act_audit_score)
+
+m.eta.kss_audit_score <- lmer(eta ~ kss + audit_score + kss:audit_score + (1 | participant), data = para_dt)
+summary(m.eta.kss_audit_score)
+m.eta.shift_kss_audit_score <- lmer(eta ~ shift + kss + audit_score + shift:kss + kss:audit_score + shift:audit_score + (1 | participant), data = para_dt)
+summary(m.eta.shift_kss_audit_score)
+m.eta.sp_audit_score <- lmer(eta ~ sp + audit_score + sp:audit_score + (1 | participant), data = para_dt)
+summary(m.eta.sp_audit_score)
+m.eta.shift_sp_audit_score <- lmer(eta ~ shift + sp + audit_score + shift:sp + shift:audit_score + sp:audit_score + (1 | participant), data = para_dt)
+summary(m.eta.shift_sp_audit_score)
+
+#gamma
+m.gamma.shift_audit_score <- lmer(gamma ~ shift + audit_score + shift:audit_score + (1 | participant), data = para_dt)
+summary(m.gamma.shift_audit_score)
+m.gamma.dn_audit_score <- lmer(gamma ~ d_n + audit_score + d_n:audit_score + (1 | participant), data = para_dt)
+summary(m.gamma.dn_audit_score)
+m.gamma.activity_audit_score <- lmer(gamma ~ activity + audit_score + activity:audit_score + (1 | participant), data = para_dt)
+summary(m.gamma.activity_audit_score)
+m.gamma.shift_act_audit_score <- lmer(gamma ~ shift + activity + audit_score + shift:activity + audit_score:activity + shift:audit_score + (1 | participant), data = para_dt)
+summary(m.gamma.shift_act_audit_score)
+
+m.gamma.kss_audit_score <- lmer(gamma ~ kss + audit_score + kss:audit_score + (1 | participant), data = para_dt)
+summary(m.gamma.kss_audit_score)
+m.gamma.shift_kss_audit_score <- lmer(gamma ~ shift + kss + audit_score + shift:kss + kss:audit_score + shift:audit_score + (1 | participant), data = para_dt)
+summary(m.gamma.shift_kss_audit_score)
+m.gamma.sp_audit_score <- lmer(gamma ~ sp + audit_score + sp:audit_score + (1 | participant), data = para_dt)
+summary(m.gamma.sp_audit_score)
+m.gamma.shift_sp_audit_score <- lmer(gamma ~ shift + sp + audit_score + shift:sp + shift:audit_score + sp:audit_score + (1 | participant), data = para_dt)
+summary(m.gamma.shift_sp_audit_score)
+
+#tau
+m.tau.shift_audit_score <- lmer(tau ~ shift + audit_score + shift:audit_score + (1 | participant), data = para_dt)
+summary(m.tau.shift_audit_score)
+m.tau.dn_audit_score <- lmer(tau ~ d_n + audit_score + d_n:audit_score + (1 | participant), data = para_dt)
+summary(m.tau.dn_audit_score)
+m.tau.activity_audit_score <- lmer(tau ~ activity + audit_score + activity:audit_score + (1 | participant), data = para_dt)
+summary(m.tau.activity_audit_score)
+m.tau.shift_act_audit_score <- lmer(tau ~ shift + activity + audit_score + shift:activity + audit_score:activity + shift:audit_score + (1 | participant), data = para_dt)
+summary(m.tau.shift_act_audit_score)
+
+m.tau.kss_audit_score <- lmer(tau ~ kss + audit_score + kss:audit_score + (1 | participant), data = para_dt)
+summary(m.tau.kss_audit_score)
+m.tau.shift_kss_audit_score <- lmer(tau ~ shift + kss + audit_score + shift:kss + kss:audit_score + shift:audit_score + (1 | participant), data = para_dt)
+summary(m.tau.shift_kss_audit_score)
+m.tau.sp_audit_score <- lmer(tau ~ sp + audit_score + sp:audit_score + (1 | participant), data = para_dt)
+summary(m.tau.sp_audit_score)
+m.tau.shift_sp_audit_score <- lmer(tau ~ shift + sp + audit_score + shift:sp + shift:audit_score + sp:audit_score + (1 | participant), data = para_dt)
+summary(m.tau.shift_sp_audit_score)
+
+####LMM - controlling for cbi_total
+#phi
+m.phi.shift_cbi_total <- lmer(phi ~ shift + cbi_total + shift:cbi_total + (1 | participant), data = para_dt)
+summary(m.phi.shift_cbi_total)
+m.phi.dn_cbi_total <- lmer(phi ~ d_n + cbi_total + d_n:cbi_total + (1 | participant), data = para_dt)
+summary(m.phi.dn_cbi_total)
+m.phi.activity_cbi_total <- lmer(phi ~ activity + cbi_total + activity:cbi_total + (1 | participant), data = para_dt)
+summary(m.phi.activity_cbi_total)
+m.phi.shift_act_cbi_total <- lmer(phi ~ shift + activity + cbi_total + shift:activity + shift:cbi_total + cbi_total:activity + (1 | participant), data = para_dt)
+summary(m.phi.shift_act_cbi_total)
+
+m.phi.kss_cbi_total <- lmer(phi ~ kss + cbi_total + kss:cbi_total + (1 | participant), data = para_dt)
+summary(m.phi.kss_cbi_total)
+m.phi.shift_kss_cbi_total <- lmer(phi ~ shift + kss + cbi_total + shift:kss + kss:cbi_total + shift:cbi_total + (1 | participant), data = para_dt)
+summary(m.phi.shift_kss_cbi_total)
+m.phi.sp_cbi_total <- lmer(phi ~ sp + cbi_total + sp:cbi_total + (1 | participant), data = para_dt)
+summary(m.phi.sp_cbi_total)
+m.phi.shift_sp_cbi_total <- lmer(phi ~ shift + sp + cbi_total + shift:sp + shift:cbi_total + cbi_total:sp + (1 | participant), data = para_dt)
+summary(m.phi.shift_sp_cbi_total)
+
+#eta
+m.eta.shift_cbi_total <- lmer(eta ~ shift + cbi_total + shift:cbi_total + (1 | participant), data = para_dt)
+summary(m.eta.shift_cbi_total)
+m.eta.dn_cbi_total <- lmer(eta ~ d_n + cbi_total + d_n:cbi_total + (1 | participant), data = para_dt)
+summary(m.eta.dn_cbi_total)
+m.eta.activity_cbi_total <- lmer(eta ~ activity + cbi_total + activity:cbi_total + (1 | participant), data = para_dt)
+summary(m.eta.activity_cbi_total)
+m.eta.shift_act_cbi_total <- lmer(eta ~ shift + activity + cbi_total + shift:activity + cbi_total:activity + shift:cbi_total + (1 | participant), data = para_dt)
+summary(m.eta.shift_act_cbi_total)
+
+m.eta.kss_cbi_total <- lmer(eta ~ kss + cbi_total + kss:cbi_total + (1 | participant), data = para_dt)
+summary(m.eta.kss_cbi_total)
+m.eta.shift_kss_cbi_total <- lmer(eta ~ shift + kss + cbi_total + shift:kss + kss:cbi_total + shift:cbi_total + (1 | participant), data = para_dt)
+summary(m.eta.shift_kss_cbi_total)
+m.eta.sp_cbi_total <- lmer(eta ~ sp + cbi_total + sp:cbi_total + (1 | participant), data = para_dt)
+summary(m.eta.sp_cbi_total)
+m.eta.shift_sp_cbi_total <- lmer(eta ~ shift + sp + cbi_total + shift:sp + shift:cbi_total + sp:cbi_total + (1 | participant), data = para_dt)
+summary(m.eta.shift_sp_cbi_total)
+
+#gamma
+m.gamma.shift_cbi_total <- lmer(gamma ~ shift + cbi_total + shift:cbi_total + (1 | participant), data = para_dt)
+summary(m.gamma.shift_cbi_total)
+m.gamma.dn_cbi_total <- lmer(gamma ~ d_n + cbi_total + d_n:cbi_total + (1 | participant), data = para_dt)
+summary(m.gamma.dn_cbi_total)
+m.gamma.activity_cbi_total <- lmer(gamma ~ activity + cbi_total + activity:cbi_total + (1 | participant), data = para_dt)
+summary(m.gamma.activity_cbi_total)
+m.gamma.shift_act_cbi_total <- lmer(gamma ~ shift + activity + cbi_total + shift:activity + cbi_total:activity + shift:cbi_total + (1 | participant), data = para_dt)
+summary(m.gamma.shift_act_cbi_total)
+
+m.gamma.kss_cbi_total <- lmer(gamma ~ kss + cbi_total + kss:cbi_total + (1 | participant), data = para_dt)
+summary(m.gamma.kss_cbi_total)
+m.gamma.shift_kss_cbi_total <- lmer(gamma ~ shift + kss + cbi_total + shift:kss + kss:cbi_total + shift:cbi_total + (1 | participant), data = para_dt)
+summary(m.gamma.shift_kss_cbi_total)
+m.gamma.sp_cbi_total <- lmer(gamma ~ sp + cbi_total + sp:cbi_total + (1 | participant), data = para_dt)
+summary(m.gamma.sp_cbi_total)
+m.gamma.shift_sp_cbi_total <- lmer(gamma ~ shift + sp + cbi_total + shift:sp + shift:cbi_total + sp:cbi_total + (1 | participant), data = para_dt)
+summary(m.gamma.shift_sp_cbi_total)
+
+#tau
+m.tau.shift_cbi_total <- lmer(tau ~ shift + cbi_total + shift:cbi_total + (1 | participant), data = para_dt)
+summary(m.tau.shift_cbi_total)
+m.tau.dn_cbi_total <- lmer(tau ~ d_n + cbi_total + d_n:cbi_total + (1 | participant), data = para_dt)
+summary(m.tau.dn_cbi_total)
+m.tau.activity_cbi_total <- lmer(tau ~ activity + cbi_total + activity:cbi_total + (1 | participant), data = para_dt)
+summary(m.tau.activity_cbi_total)
+m.tau.shift_act_cbi_total <- lmer(tau ~ shift + activity + cbi_total + shift:activity + cbi_total:activity + shift:cbi_total + (1 | participant), data = para_dt)
+summary(m.tau.shift_act_cbi_total)
+
+m.tau.kss_cbi_total <- lmer(tau ~ kss + cbi_total + kss:cbi_total + (1 | participant), data = para_dt)
+summary(m.tau.kss_cbi_total)
+m.tau.shift_kss_cbi_total <- lmer(tau ~ shift + kss + cbi_total + shift:kss + kss:cbi_total + shift:cbi_total + (1 | participant), data = para_dt)
+summary(m.tau.shift_kss_cbi_total)
+m.tau.sp_cbi_total <- lmer(tau ~ sp + cbi_total + sp:cbi_total + (1 | participant), data = para_dt)
+summary(m.tau.sp_cbi_total)
+m.tau.shift_sp_cbi_total <- lmer(tau ~ shift + sp + cbi_total + shift:sp + shift:cbi_total + sp:cbi_total + (1 | participant), data = para_dt)
+summary(m.tau.shift_sp_cbi_total)
+
+####LMM - controlling for cbi_work
+#phi
+m.phi.shift_cbi_work <- lmer(phi ~ shift + cbi_work + shift:cbi_work + (1 | participant), data = para_dt)
+summary(m.phi.shift_cbi_work)
+m.phi.dn_cbi_work <- lmer(phi ~ d_n + cbi_work + d_n:cbi_work + (1 | participant), data = para_dt)
+summary(m.phi.dn_cbi_work)
+m.phi.activity_cbi_work <- lmer(phi ~ activity + cbi_work + activity:cbi_work + (1 | participant), data = para_dt)
+summary(m.phi.activity_cbi_work)
+m.phi.shift_act_cbi_work <- lmer(phi ~ shift + activity + cbi_work + shift:activity + shift:cbi_work + cbi_work:activity + (1 | participant), data = para_dt)
+summary(m.phi.shift_act_cbi_work)
+
+m.phi.kss_cbi_work <- lmer(phi ~ kss + cbi_work + kss:cbi_work + (1 | participant), data = para_dt)
+summary(m.phi.kss_cbi_work)
+m.phi.shift_kss_cbi_work <- lmer(phi ~ shift + kss + cbi_work + shift:kss + kss:cbi_work + shift:cbi_work + (1 | participant), data = para_dt)
+summary(m.phi.shift_kss_cbi_work)
+m.phi.sp_cbi_work <- lmer(phi ~ sp + cbi_work + sp:cbi_work + (1 | participant), data = para_dt)
+summary(m.phi.sp_cbi_work)
+m.phi.shift_sp_cbi_work <- lmer(phi ~ shift + sp + cbi_work + shift:sp + shift:cbi_work + cbi_work:sp + (1 | participant), data = para_dt)
+summary(m.phi.shift_sp_cbi_work)
+
+#eta
+m.eta.shift_cbi_work <- lmer(eta ~ shift + cbi_work + shift:cbi_work + (1 | participant), data = para_dt)
+summary(m.eta.shift_cbi_work)
+m.eta.dn_cbi_work <- lmer(eta ~ d_n + cbi_work + d_n:cbi_work + (1 | participant), data = para_dt)
+summary(m.eta.dn_cbi_work)
+m.eta.activity_cbi_work <- lmer(eta ~ activity + cbi_work + activity:cbi_work + (1 | participant), data = para_dt)
+summary(m.eta.activity_cbi_work)
+m.eta.shift_act_cbi_work <- lmer(eta ~ shift + activity + cbi_work + shift:activity + cbi_work:activity + shift:cbi_work + (1 | participant), data = para_dt)
+summary(m.eta.shift_act_cbi_work)
+
+m.eta.kss_cbi_work <- lmer(eta ~ kss + cbi_work + kss:cbi_work + (1 | participant), data = para_dt)
+summary(m.eta.kss_cbi_work)
+m.eta.shift_kss_cbi_work <- lmer(eta ~ shift + kss + cbi_work + shift:kss + kss:cbi_work + shift:cbi_work + (1 | participant), data = para_dt)
+summary(m.eta.shift_kss_cbi_work)
+m.eta.sp_cbi_work <- lmer(eta ~ sp + cbi_work + sp:cbi_work + (1 | participant), data = para_dt)
+summary(m.eta.sp_cbi_work)
+m.eta.shift_sp_cbi_work <- lmer(eta ~ shift + sp + cbi_work + shift:sp + shift:cbi_work + sp:cbi_work + (1 | participant), data = para_dt)
+summary(m.eta.shift_sp_cbi_work)
+
+#gamma
+m.gamma.shift_cbi_work <- lmer(gamma ~ shift + cbi_work + shift:cbi_work + (1 | participant), data = para_dt)
+summary(m.gamma.shift_cbi_work)
+m.gamma.dn_cbi_work <- lmer(gamma ~ d_n + cbi_work + d_n:cbi_work + (1 | participant), data = para_dt)
+summary(m.gamma.dn_cbi_work)
+m.gamma.activity_cbi_work <- lmer(gamma ~ activity + cbi_work + activity:cbi_work + (1 | participant), data = para_dt)
+summary(m.gamma.activity_cbi_work)
+m.gamma.shift_act_cbi_work <- lmer(gamma ~ shift + activity + cbi_work + shift:activity + cbi_work:activity + shift:cbi_work + (1 | participant), data = para_dt)
+summary(m.gamma.shift_act_cbi_work)
+
+m.gamma.kss_cbi_work <- lmer(gamma ~ kss + cbi_work + kss:cbi_work + (1 | participant), data = para_dt)
+summary(m.gamma.kss_cbi_work)
+m.gamma.shift_kss_cbi_work <- lmer(gamma ~ shift + kss + cbi_work + shift:kss + kss:cbi_work + shift:cbi_work + (1 | participant), data = para_dt)
+summary(m.gamma.shift_kss_cbi_work)
+m.gamma.sp_cbi_work <- lmer(gamma ~ sp + cbi_work + sp:cbi_work + (1 | participant), data = para_dt)
+summary(m.gamma.sp_cbi_work)
+m.gamma.shift_sp_cbi_work <- lmer(gamma ~ shift + sp + cbi_work + shift:sp + shift:cbi_work + sp:cbi_work + (1 | participant), data = para_dt)
+summary(m.gamma.shift_sp_cbi_work)
+
+#tau
+m.tau.shift_cbi_work <- lmer(tau ~ shift + cbi_work + shift:cbi_work + (1 | participant), data = para_dt)
+summary(m.tau.shift_cbi_work)
+m.tau.dn_cbi_work <- lmer(tau ~ d_n + cbi_work + d_n:cbi_work + (1 | participant), data = para_dt)
+summary(m.tau.dn_cbi_work)
+m.tau.activity_cbi_work <- lmer(tau ~ activity + cbi_work + activity:cbi_work + (1 | participant), data = para_dt)
+summary(m.tau.activity_cbi_work)
+m.tau.shift_act_cbi_work <- lmer(tau ~ shift + activity + cbi_work + shift:activity + cbi_work:activity + shift:cbi_work + (1 | participant), data = para_dt)
+summary(m.tau.shift_act_cbi_work)
+
+m.tau.kss_cbi_work <- lmer(tau ~ kss + cbi_work + kss:cbi_work + (1 | participant), data = para_dt)
+summary(m.tau.kss_cbi_work)
+m.tau.shift_kss_cbi_work <- lmer(tau ~ shift + kss + cbi_work + shift:kss + kss:cbi_work + shift:cbi_work + (1 | participant), data = para_dt)
+summary(m.tau.shift_kss_cbi_work)
+m.tau.sp_cbi_work <- lmer(tau ~ sp + cbi_work + sp:cbi_work + (1 | participant), data = para_dt)
+summary(m.tau.sp_cbi_work)
+m.tau.shift_sp_cbi_work <- lmer(tau ~ shift + sp + cbi_work + shift:sp + shift:cbi_work + sp:cbi_work + (1 | participant), data = para_dt)
+summary(m.tau.shift_sp_cbi_work)
+
+
+####LMM - controlling for isi_score
+#phi
+m.phi.shift_isi_score <- lmer(phi ~ shift + isi_score + shift:isi_score + (1 | participant), data = para_dt)
+summary(m.phi.shift_isi_score)
+m.phi.dn_isi_score <- lmer(phi ~ d_n + isi_score + d_n:isi_score + (1 | participant), data = para_dt)
+summary(m.phi.dn_isi_score)
+m.phi.activity_isi_score <- lmer(phi ~ activity + isi_score + activity:isi_score + (1 | participant), data = para_dt)
+summary(m.phi.activity_isi_score)
+m.phi.shift_act_isi_score <- lmer(phi ~ shift + activity + isi_score + shift:activity + shift:isi_score + isi_score:activity + (1 | participant), data = para_dt)
+summary(m.phi.shift_act_isi_score)
+
+m.phi.kss_isi_score <- lmer(phi ~ kss + isi_score + kss:isi_score + (1 | participant), data = para_dt)
+summary(m.phi.kss_isi_score)
+m.phi.shift_kss_isi_score <- lmer(phi ~ shift + kss + isi_score + shift:kss + kss:isi_score + shift:isi_score + (1 | participant), data = para_dt)
+summary(m.phi.shift_kss_isi_score)
+m.phi.sp_isi_score <- lmer(phi ~ sp + isi_score + sp:isi_score + (1 | participant), data = para_dt)
+summary(m.phi.sp_isi_score)
+m.phi.shift_sp_isi_score <- lmer(phi ~ shift + sp + isi_score + shift:sp + shift:isi_score + isi_score:sp + (1 | participant), data = para_dt)
+summary(m.phi.shift_sp_isi_score)
+
+#eta
+m.eta.shift_isi_score <- lmer(eta ~ shift + isi_score + shift:isi_score + (1 | participant), data = para_dt)
+summary(m.eta.shift_isi_score)
+m.eta.dn_isi_score <- lmer(eta ~ d_n + isi_score + d_n:isi_score + (1 | participant), data = para_dt)
+summary(m.eta.dn_isi_score)
+m.eta.activity_isi_score <- lmer(eta ~ activity + isi_score + activity:isi_score + (1 | participant), data = para_dt)
+summary(m.eta.activity_isi_score)
+m.eta.shift_act_isi_score <- lmer(eta ~ shift + activity + isi_score + shift:activity + isi_score:activity + shift:isi_score + (1 | participant), data = para_dt)
+summary(m.eta.shift_act_isi_score)
+
+m.eta.kss_isi_score <- lmer(eta ~ kss + isi_score + kss:isi_score + (1 | participant), data = para_dt)
+summary(m.eta.kss_isi_score)
+m.eta.shift_kss_isi_score <- lmer(eta ~ shift + kss + isi_score + shift:kss + kss:isi_score + shift:isi_score + (1 | participant), data = para_dt)
+summary(m.eta.shift_kss_isi_score)
+m.eta.sp_isi_score <- lmer(eta ~ sp + isi_score + sp:isi_score + (1 | participant), data = para_dt)
+summary(m.eta.sp_isi_score)
+m.eta.shift_sp_isi_score <- lmer(eta ~ shift + sp + isi_score + shift:sp + shift:isi_score + sp:isi_score + (1 | participant), data = para_dt)
+summary(m.eta.shift_sp_isi_score)
+
+#gamma
+m.gamma.shift_isi_score <- lmer(gamma ~ shift + isi_score + shift:isi_score + (1 | participant), data = para_dt)
+summary(m.gamma.shift_isi_score)
+m.gamma.dn_isi_score <- lmer(gamma ~ d_n + isi_score + d_n:isi_score + (1 | participant), data = para_dt)
+summary(m.gamma.dn_isi_score)
+m.gamma.activity_isi_score <- lmer(gamma ~ activity + isi_score + activity:isi_score + (1 | participant), data = para_dt)
+summary(m.gamma.activity_isi_score)
+m.gamma.shift_act_isi_score <- lmer(gamma ~ shift + activity + isi_score + shift:activity + isi_score:activity + shift:isi_score + (1 | participant), data = para_dt)
+summary(m.gamma.shift_act_isi_score)
+
+m.gamma.kss_isi_score <- lmer(gamma ~ kss + isi_score + kss:isi_score + (1 | participant), data = para_dt)
+summary(m.gamma.kss_isi_score)
+m.gamma.shift_kss_isi_score <- lmer(gamma ~ shift + kss + isi_score + shift:kss + kss:isi_score + shift:isi_score + (1 | participant), data = para_dt)
+summary(m.gamma.shift_kss_isi_score)
+m.gamma.sp_isi_score <- lmer(gamma ~ sp + isi_score + sp:isi_score + (1 | participant), data = para_dt)
+summary(m.gamma.sp_isi_score)
+m.gamma.shift_sp_isi_score <- lmer(gamma ~ shift + sp + isi_score + shift:sp + shift:isi_score + sp:isi_score + (1 | participant), data = para_dt)
+summary(m.gamma.shift_sp_isi_score)
+
+#tau
+m.tau.shift_isi_score <- lmer(tau ~ shift + isi_score + shift:isi_score + (1 | participant), data = para_dt)
+summary(m.tau.shift_isi_score)
+m.tau.dn_isi_score <- lmer(tau ~ d_n + isi_score + d_n:isi_score + (1 | participant), data = para_dt)
+summary(m.tau.dn_isi_score)
+m.tau.activity_isi_score <- lmer(tau ~ activity + isi_score + activity:isi_score + (1 | participant), data = para_dt)
+summary(m.tau.activity_isi_score)
+m.tau.shift_act_isi_score <- lmer(tau ~ shift + activity + isi_score + shift:activity + isi_score:activity + shift:isi_score + (1 | participant), data = para_dt)
+summary(m.tau.shift_act_isi_score)
+
+m.tau.kss_isi_score <- lmer(tau ~ kss + isi_score + kss:isi_score + (1 | participant), data = para_dt)
+summary(m.tau.kss_isi_score)
+m.tau.shift_kss_isi_score <- lmer(tau ~ shift + kss + isi_score + shift:kss + kss:isi_score + shift:isi_score + (1 | participant), data = para_dt)
+summary(m.tau.shift_kss_isi_score)
+m.tau.sp_isi_score <- lmer(tau ~ sp + isi_score + sp:isi_score + (1 | participant), data = para_dt)
+summary(m.tau.sp_isi_score)
+m.tau.shift_sp_isi_score <- lmer(tau ~ shift + sp + isi_score + shift:sp + shift:isi_score + sp:isi_score + (1 | participant), data = para_dt)
+summary(m.tau.shift_sp_isi_score)
