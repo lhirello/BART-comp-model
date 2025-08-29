@@ -30,6 +30,19 @@ para_dt <- para_dt %>%
     TRUE ~ NA_character_
   ))
 
+para_dt <- para_dt %>%
+  mutate(rotation = case_when(
+    participant == "01" | participant == "02" ~ "26Mar24",
+    participant == "03" | participant == "04" ~ "06Apr24",
+    participant == "05" | participant == "06" ~ "09Aug24",
+    participant == "07" | participant == "08" ~ "24Nov24",
+    participant == "09" | participant == "10" ~ "12Jan25",
+    participant == "11" | participant == "12" ~ "31Jan25",
+    participant == "13" | participant == "14" ~ "07Mar25",
+    participant == "15" | participant == "16" ~ "04Apr25",
+    TRUE ~ NA_character_
+  ))
+
 para_dt[, phi := as.numeric(phi)]
 para_dt[, eta := as.numeric(eta)]
 para_dt[, gamma := as.numeric(gamma)]
@@ -46,6 +59,14 @@ para_dt <- para_dt %>%
     TRUE ~ NA_character_
   ))
 
+para_dt <- para_dt %>%
+  mutate(consistency_macro = case_when(
+    consistency == "CI" ~ "C",
+    consistency == "CC" ~ "C",
+    consistency == "I" ~ "I",
+    TRUE ~ NA_character_
+  ))
+
 
 para_dt$participant <- factor(para_dt$participant,
                             levels = c("01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12", "13", "14", "15", "16"))
@@ -57,10 +78,16 @@ para_dt$d_n <- factor(para_dt$d_n,
                     levels = c("day", "night"))
 para_dt$consistency <- factor(para_dt$consistency,
                       levels = c("CI", "I", "CC"))
-
+para_dt$consistency_macro <- factor(para_dt$consistency_macro,
+                              levels = c("C", "I"))
+para_dt$rotation <- factor(para_dt$rotation,
+                        levels = c("26Mar24", "06Apr24", "09Aug24", "24Nov24", "12Jan25", "31Jan25", "07Mar25", "04Apr25"))
 
 anyNA(para_dt)
 
+kss_sim_dt <- as.data.table(read_excel("kss_sim_dt.xlsx"))
+sp_sim_dt <- as.data.table(read_excel("sp_sim_dt.xlsx"))
+wide_sa_sim_dt <- as.data.table(read_excel("wide_sa_sim_dt.xlsx"))
 
 #tomorrow need to write the code to load the files these came from so they still work
 para_dt[kss_sim_dt, on = .(trial_ID = trial_ID_mod), kss := i.kss]
@@ -132,6 +159,27 @@ write_xlsx(para_dt, "para_dt.xlsx")
 mean(para_dt$tau)
 sd(para_dt$tau)
 
+#calculate ICCs
+iccMixed("tau", id = "participant", data = para_dt) #Icc = variance, sigma = SD
+
+para_dt[, c("Btau", "Wtau") := meanDeviations(tau), by = participant]
+plot(testDistribution(para_dt$Wtau, extremevalues = "theoretical", ev.perc = 0.005), varlab = "Within tau (Wtau)") #visualize Wtau distribution
+testDistribution(para_dt$Wtau, extremevalues = "theoretical", ev.perc = 0.005)$Data[isEV == "Yes"] #identify extreme values
+para_dt[c(104, 100, 1, 13, 28, 112), .(tau, Btau, Wtau, trial_ID, participant)] #view extreme values
+para_dt.noev <- para_dt[-c(104, 100, 1, 13, 28, 112)] #remove extreme values
+plot(testDistribution(para_dt.noev$Wtau, extremevalues = "theoretical", ev.perc = 0.005), varlab = "Within tau (Wtau)") #visualize Wtau distribution
+
+para_dt.noev[, c("Btau", "Wtau") := meanDeviations(tau), by = participant] #re-run Btau & Wtau with extremes removed
+para_dt.b <- para_dt.noev[!duplicated(participant)] #create new data table with one entry per participant
+plot(testDistribution(para_dt.b$Btau, extremevalues = "theoretical", ev.perc = 0.005), varlab = "Average tau (Btau)") #one extremely high value...
+testDistribution(para_dt.b$Btau, extremevalues = "theoretical", ev.perc = 0.005)$Data[isEV == "Yes"] #identify extreme values
+para_dt.b[c(7), .(tau, Btau, Wtau, trial_ID, participant)] #view extreme values
+para_dt.noevb <- para_dt.b[-c(7)]
+plot(testDistribution(para_dt.noevb$Btau, extremevalues = "theoretical", ev.perc = 0.005), varlab = "Average tau (Btau)") #visualize Btau distribution
+
+#re-make full data set without any extreme values (no participant 7, 13N22, 13D22, 01D11, 02N11, 04D22, 14N22)
+para_noev_dt <- para_dt.noev[participant != "07"]
+
 #calculate tau means and sds for each group
 para_dt[consistency == "CC", .(mean_tauCC = mean(tau, na.rm = TRUE))]
 para_dt[consistency == "CI", .(mean_tauIC = mean(tau, na.rm = TRUE))]
@@ -147,7 +195,6 @@ kruskal.test(tau ~ consistency, data = para_dt)
 #show which groups are significant from each other -> they all are
 pairwise.wilcox.test(para_dt$tau, para_dt$consistency,
                      p.adjust.method = "bonferroni")
-
 
 
 #LMM
@@ -217,7 +264,6 @@ summary(m.eta.sa_mot)
 m.eta.rxnt <- lmer(eta ~ avg_rxn_time + (1 | participant), data = para_dt)
 summary(m.eta.rxnt)
 
-
 #gamma - risk propensity
 m.gamma.shift <- lmer(gamma ~ shift + (1 | participant), data = para_dt)
 summary(m.gamma.shift)
@@ -250,8 +296,6 @@ summary(m.gamma.sa_mot)
 
 m.gamma.rxnt <- lmer(gamma ~ avg_rxn_time + (1 | participant), data = para_dt)
 summary(m.gamma.rxnt)
-
-
 
 #tau - behavioral consistency
 m.tau.shift <- lmer(tau ~ shift + (1 | participant), data = para_dt)
@@ -1235,3 +1279,492 @@ m.tau.sp_swd_score <- lmer(tau ~ sp + swd_score + sp:swd_score + (1 | participan
 summary(m.tau.sp_swd_score)
 m.tau.shift_sp_swd_score <- lmer(tau ~ shift + sp + swd_score + shift:sp + shift:swd_score + sp:swd_score + (1 | participant), data = para_dt)
 summary(m.tau.shift_sp_swd_score)
+
+####LMM - controlling for consistency_macro
+#phi
+m.phi.shift_consistency_macro <- lmer(phi ~ shift + consistency_macro + shift:consistency_macro + (1 | participant), data = para_dt)
+summary(m.phi.shift_consistency_macro)
+m.phi.dn_consistency_macro <- lmer(phi ~ d_n + consistency_macro + d_n:consistency_macro + (1 | participant), data = para_dt)
+summary(m.phi.dn_consistency_macro)
+m.phi.activity_consistency_macro <- lmer(phi ~ activity + consistency_macro + activity:consistency_macro + (1 | participant), data = para_dt)
+summary(m.phi.activity_consistency_macro)
+m.phi.shift_act_consistency_macro <- lmer(phi ~ shift + activity + consistency_macro + shift:activity + shift:consistency_macro + consistency_macro:activity + (1 | participant), data = para_dt)
+summary(m.phi.shift_act_consistency_macro)
+
+m.phi.kss_consistency_macro <- lmer(phi ~ kss + consistency_macro + kss:consistency_macro + (1 | participant), data = para_dt)
+summary(m.phi.kss_consistency_macro)
+m.phi.shift_kss_consistency_macro <- lmer(phi ~ shift + kss + consistency_macro + shift:kss + kss:consistency_macro + shift:consistency_macro + (1 | participant), data = para_dt)
+summary(m.phi.shift_kss_consistency_macro)
+m.phi.sp_consistency_macro <- lmer(phi ~ sp + consistency_macro + sp:consistency_macro + (1 | participant), data = para_dt)
+summary(m.phi.sp_consistency_macro)
+m.phi.shift_sp_consistency_macro <- lmer(phi ~ shift + sp + consistency_macro + shift:sp + shift:consistency_macro + consistency_macro:sp + (1 | participant), data = para_dt)
+summary(m.phi.shift_sp_consistency_macro)
+
+#eta
+m.eta.shift_consistency_macro <- lmer(eta ~ shift + consistency_macro + shift:consistency_macro + (1 | participant), data = para_dt)
+summary(m.eta.shift_consistency_macro)
+m.eta.dn_consistency_macro <- lmer(eta ~ d_n + consistency_macro + d_n:consistency_macro + (1 | participant), data = para_dt)
+summary(m.eta.dn_consistency_macro)
+m.eta.activity_consistency_macro <- lmer(eta ~ activity + consistency_macro + activity:consistency_macro + (1 | participant), data = para_dt)
+summary(m.eta.activity_consistency_macro)
+m.eta.shift_act_consistency_macro <- lmer(eta ~ shift + activity + consistency_macro + shift:activity + consistency_macro:activity + shift:consistency_macro + (1 | participant), data = para_dt)
+summary(m.eta.shift_act_consistency_macro)
+
+m.eta.kss_consistency_macro <- lmer(eta ~ kss + consistency_macro + kss:consistency_macro + (1 | participant), data = para_dt)
+summary(m.eta.kss_consistency_macro)
+m.eta.shift_kss_consistency_macro <- lmer(eta ~ shift + kss + consistency_macro + shift:kss + kss:consistency_macro + shift:consistency_macro + (1 | participant), data = para_dt)
+summary(m.eta.shift_kss_consistency_macro)
+m.eta.sp_consistency_macro <- lmer(eta ~ sp + consistency_macro + sp:consistency_macro + (1 | participant), data = para_dt)
+summary(m.eta.sp_consistency_macro)
+m.eta.shift_sp_consistency_macro <- lmer(eta ~ shift + sp + consistency_macro + shift:sp + shift:consistency_macro + sp:consistency_macro + (1 | participant), data = para_dt)
+summary(m.eta.shift_sp_consistency_macro)
+
+#gamma
+m.gamma.shift_consistency_macro <- lmer(gamma ~ shift + consistency_macro + shift:consistency_macro + (1 | participant), data = para_dt)
+summary(m.gamma.shift_consistency_macro)
+m.gamma.dn_consistency_macro <- lmer(gamma ~ d_n + consistency_macro + d_n:consistency_macro + (1 | participant), data = para_dt)
+summary(m.gamma.dn_consistency_macro)
+m.gamma.activity_consistency_macro <- lmer(gamma ~ activity + consistency_macro + activity:consistency_macro + (1 | participant), data = para_dt)
+summary(m.gamma.activity_consistency_macro)
+m.gamma.shift_act_consistency_macro <- lmer(gamma ~ shift + activity + consistency_macro + shift:activity + consistency_macro:activity + shift:consistency_macro + (1 | participant), data = para_dt)
+summary(m.gamma.shift_act_consistency_macro)
+
+m.gamma.kss_consistency_macro <- lmer(gamma ~ kss + consistency_macro + kss:consistency_macro + (1 | participant), data = para_dt)
+summary(m.gamma.kss_consistency_macro)
+m.gamma.shift_kss_consistency_macro <- lmer(gamma ~ shift + kss + consistency_macro + shift:kss + kss:consistency_macro + shift:consistency_macro + (1 | participant), data = para_dt)
+summary(m.gamma.shift_kss_consistency_macro)
+m.gamma.sp_consistency_macro <- lmer(gamma ~ sp + consistency_macro + sp:consistency_macro + (1 | participant), data = para_dt)
+summary(m.gamma.sp_consistency_macro)
+m.gamma.shift_sp_consistency_macro <- lmer(gamma ~ shift + sp + consistency_macro + shift:sp + shift:consistency_macro + sp:consistency_macro + (1 | participant), data = para_dt)
+summary(m.gamma.shift_sp_consistency_macro)
+
+#tau
+m.tau.shift_consistency_macro <- lmer(tau ~ shift + consistency_macro + shift:consistency_macro + (1 | participant), data = para_dt)
+summary(m.tau.shift_consistency_macro)
+m.tau.dn_consistency_macro <- lmer(tau ~ d_n + consistency_macro + d_n:consistency_macro + (1 | participant), data = para_dt)
+summary(m.tau.dn_consistency_macro)
+m.tau.activity_consistency_macro <- lmer(tau ~ activity + consistency_macro + activity:consistency_macro + (1 | participant), data = para_dt)
+summary(m.tau.activity_consistency_macro)
+m.tau.shift_act_consistency_macro <- lmer(tau ~ shift + activity + consistency_macro + shift:activity + consistency_macro:activity + shift:consistency_macro + (1 | participant), data = para_dt)
+summary(m.tau.shift_act_consistency_macro)
+
+m.tau.kss_consistency_macro <- lmer(tau ~ kss + consistency_macro + kss:consistency_macro + (1 | participant), data = para_dt)
+summary(m.tau.kss_consistency_macro)
+m.tau.shift_kss_consistency_macro <- lmer(tau ~ shift + kss + consistency_macro + shift:kss + kss:consistency_macro + shift:consistency_macro + (1 | participant), data = para_dt)
+summary(m.tau.shift_kss_consistency_macro)
+m.tau.sp_consistency_macro <- lmer(tau ~ sp + consistency_macro + sp:consistency_macro + (1 | participant), data = para_dt)
+summary(m.tau.sp_consistency_macro)
+m.tau.shift_sp_consistency_macro <- lmer(tau ~ shift + sp + consistency_macro + shift:sp + shift:consistency_macro + sp:consistency_macro + (1 | participant), data = para_dt)
+summary(m.tau.shift_sp_consistency_macro)
+
+
+############################################
+############################################
+############################################
+
+#LMM for data with no extreme values
+#phi - prior belief of success
+m.noev.phi.shift <- lmer(phi ~ shift + (1 | participant), data = para_noev_dt)
+summary(m.noev.phi.shift)
+m.noev.phi.dn <- lmer(phi ~ d_n + (1 | participant), data = para_noev_dt)
+summary(m.noev.phi.dn)
+m.noev.phi.activity <- lmer(phi ~ activity + (1 | participant), data = para_noev_dt)
+summary(m.noev.phi.activity)
+m.noev.phi.shift_act <- lmer(phi ~ shift + activity + shift:activity + (1 | participant), data = para_noev_dt)
+summary(m.noev.phi.shift_act)
+
+m.noev.phi.kss <- lmer(phi ~ kss + (1 | participant), data = para_noev_dt)
+summary(m.noev.phi.kss)
+m.noev.phi.shift_kss <- lmer(phi ~ shift + kss + shift:kss + (1 | participant), data = para_noev_dt)
+summary(m.noev.phi.shift_kss)
+m.noev.phi.sp <- lmer(phi ~ sp + (1 | participant), data = para_noev_dt)
+summary(m.noev.phi.sp)
+m.noev.phi.shift_sp <- lmer(phi ~ shift + sp + shift:sp + (1 | participant), data = para_noev_dt)
+summary(m.noev.phi.shift_sp)
+
+m.noev.phi.sa <- lmer(phi ~ sa + (1 | participant), data = para_noev_dt)
+summary(m.noev.phi.sa)
+m.noev.phi.sa_con <- lmer(phi ~ con + (1 | participant), data = para_noev_dt)
+summary(m.noev.phi.sa_con)
+m.noev.phi.sa_diff <- lmer(phi ~ diff + (1 | participant), data = para_noev_dt)
+summary(m.noev.phi.sa_diff)
+m.noev.phi.sa_eff <- lmer(phi ~ eff + (1 | participant), data = para_noev_dt)
+summary(m.noev.phi.sa_eff)
+m.noev.phi.sa_mot <- lmer(phi ~ mot + (1 | participant), data = para_noev_dt)
+summary(m.noev.phi.sa_mot)
+
+m.noev.phi.rxnt <- lmer(phi ~ avg_rxn_time + (1 | participant), data = para_noev_dt)
+summary(m.noev.phi.rxnt)
+
+#eta - learning rate
+m.noev.eta.shift <- lmer(eta ~ shift + (1 | participant), data = para_noev_dt)
+summary(m.noev.eta.shift)
+m.noev.eta.dn <- lmer(eta ~ d_n + (1 | participant), data = para_noev_dt)
+summary(m.noev.eta.dn)
+m.noev.eta.activity <- lmer(eta ~ activity + (1 | participant), data = para_noev_dt)
+summary(m.noev.eta.activity)
+m.noev.eta.shift_act <- lmer(eta ~ shift + activity + shift:activity + (1 | participant), data = para_noev_dt)
+summary(m.noev.eta.shift_act)
+
+m.noev.eta.kss <- lmer(eta ~ kss + (1 | participant), data = para_noev_dt)
+summary(m.noev.eta.kss)
+m.noev.eta.shift_kss <- lmer(eta ~ shift + kss + shift:kss + (1 | participant), data = para_noev_dt)
+summary(m.noev.eta.shift_kss)
+m.noev.eta.sp <- lmer(eta ~ sp + (1 | participant), data = para_noev_dt)
+summary(m.noev.eta.sp)
+m.noev.eta.shift_sp <- lmer(eta ~ shift + sp + shift:sp + (1 | participant), data = para_noev_dt)
+summary(m.noev.eta.shift_sp)
+
+m.noev.eta.sa <- lmer(eta ~ sa + (1 | participant), data = para_noev_dt)
+summary(m.noev.eta.sa)
+m.noev.eta.sa_con <- lmer(eta ~ con + (1 | participant), data = para_noev_dt)
+summary(m.noev.eta.sa_con)
+m.noev.eta.sa_diff <- lmer(eta ~ diff + (1 | participant), data = para_noev_dt)
+summary(m.noev.eta.sa_diff)
+m.noev.eta.sa_eff <- lmer(eta ~ eff + (1 | participant), data = para_noev_dt)
+summary(m.noev.eta.sa_eff)
+m.noev.eta.sa_mot <- lmer(eta ~ mot + (1 | participant), data = para_noev_dt)
+summary(m.noev.eta.sa_mot)
+
+m.noev.eta.rxnt <- lmer(eta ~ avg_rxn_time + (1 | participant), data = para_noev_dt)
+summary(m.noev.eta.rxnt)
+
+#gamma - risk propensity
+#para_noev_dt$shift <- relevel(para_noev_dt$shift, ref = "D1")
+
+m.noev.gamma.shift <- lmer(gamma ~ shift + (1 | participant), data = para_noev_dt)
+summary(m.noev.gamma.shift)
+m.noev.gamma.dn <- lmer(gamma ~ d_n + (1 | participant), data = para_noev_dt)
+summary(m.noev.gamma.dn)
+m.noev.gamma.activity <- lmer(gamma ~ activity + (1 | participant), data = para_noev_dt)
+summary(m.noev.gamma.activity)
+m.noev.gamma.shift_act <- lmer(gamma ~ shift + activity + shift:activity + (1 | participant), data = para_noev_dt)
+summary(m.noev.gamma.shift_act)
+
+m.noev.gamma.kss <- lmer(gamma ~ kss + (1 | participant), data = para_noev_dt)
+summary(m.noev.gamma.kss)
+m.noev.gamma.shift_kss <- lmer(gamma ~ shift + kss + shift:kss + (1 | participant), data = para_noev_dt)
+summary(m.noev.gamma.shift_kss)
+m.noev.gamma.sp <- lmer(gamma ~ sp + (1 | participant), data = para_noev_dt)
+summary(m.noev.gamma.sp)
+m.noev.gamma.shift_sp <- lmer(gamma ~ shift + sp + shift:sp + (1 | participant), data = para_noev_dt)
+summary(m.noev.gamma.shift_sp)
+
+m.noev.gamma.sa <- lmer(gamma ~ sa + (1 | participant), data = para_noev_dt)
+summary(m.noev.gamma.sa)
+m.noev.gamma.sa_con <- lmer(gamma ~ con + (1 | participant), data = para_noev_dt)
+summary(m.noev.gamma.sa_con)
+m.noev.gamma.sa_diff <- lmer(gamma ~ diff + (1 | participant), data = para_noev_dt)
+summary(m.noev.gamma.sa_diff)
+m.noev.gamma.sa_eff <- lmer(gamma ~ eff + (1 | participant), data = para_noev_dt)
+summary(m.noev.gamma.sa_eff)
+m.noev.gamma.sa_mot <- lmer(gamma ~ mot + (1 | participant), data = para_noev_dt)
+summary(m.noev.gamma.sa_mot)
+
+m.noev.gamma.rxnt <- lmer(gamma ~ avg_rxn_time + (1 | participant), data = para_noev_dt)
+summary(m.noev.gamma.rxnt)
+
+#tau - behavioral consistency
+m.noev.tau.shift <- lmer(tau ~ shift + (1 | participant), data = para_noev_dt)
+summary(m.noev.tau.shift)
+m.noev.tau.dn <- lmer(tau ~ d_n + (1 | participant), data = para_noev_dt)
+summary(m.noev.tau.dn)
+m.noev.tau.activity <- lmer(tau ~ activity + (1 | participant), data = para_noev_dt)
+summary(m.noev.tau.activity)
+m.noev.tau.shift_act <- lmer(tau ~ shift + activity + shift:activity + (1 | participant), data = para_noev_dt)
+summary(m.noev.tau.shift_act)
+
+m.noev.tau.kss <- lmer(tau ~ kss + (1 | participant), data = para_noev_dt)
+summary(m.noev.tau.kss)
+m.noev.tau.shift_kss <- lmer(tau ~ shift + kss + shift:kss + (1 | participant), data = para_noev_dt)
+summary(m.noev.tau.shift_kss)
+m.noev.tau.sp <- lmer(tau ~ sp + (1 | participant), data = para_noev_dt)
+summary(m.noev.tau.sp)
+m.noev.tau.shift_sp <- lmer(tau ~ shift + sp + shift:sp + (1 | participant), data = para_noev_dt)
+summary(m.noev.tau.shift_sp)
+
+m.noev.tau.sa <- lmer(tau ~ sa + (1 | participant), data = para_noev_dt)
+summary(m.noev.tau.sa)
+m.noev.tau.sa_con <- lmer(tau ~ con + (1 | participant), data = para_noev_dt)
+summary(m.noev.tau.sa_con)
+m.noev.tau.sa_diff <- lmer(tau ~ diff + (1 | participant), data = para_noev_dt)
+summary(m.noev.tau.sa_diff)
+m.noev.tau.sa_eff <- lmer(tau ~ eff + (1 | participant), data = para_noev_dt)
+summary(m.noev.tau.sa_eff)
+m.noev.tau.sa_mot <- lmer(tau ~ mot + (1 | participant), data = para_noev_dt)
+summary(m.noev.tau.sa_mot)
+
+###############################
+###############################
+###############################
+
+#LMM with rotation as random intercept
+#phi - prior belief of success
+m.2r.phi.shift <- lmer(phi ~ shift + (1 | participant) + (1 | rotation), data = para_dt)
+summary(m.2r.phi.shift)
+m.2r.phi.dn <- lmer(phi ~ d_n + (1 | participant) + (1 | rotation), data = para_dt)
+summary(m.2r.phi.dn)
+m.2r.phi.activity <- lmer(phi ~ activity + (1 | participant) + (1 | rotation), data = para_dt)
+summary(m.2r.phi.activity)
+m.2r.phi.shift_act <- lmer(phi ~ shift + activity + shift:activity + (1 | participant) + (1 | rotation), data = para_dt)
+summary(m.2r.phi.shift_act)
+
+m.2r.phi.kss <- lmer(phi ~ kss + (1 | participant) + (1 | rotation), data = para_dt)
+summary(m.2r.phi.kss)
+m.2r.phi.shift_kss <- lmer(phi ~ shift + kss + shift:kss + (1 | participant) + (1 | rotation), data = para_dt)
+summary(m.2r.phi.shift_kss)
+m.2r.phi.sp <- lmer(phi ~ sp + (1 | participant) + (1 | rotation), data = para_dt)
+summary(m.2r.phi.sp)
+m.2r.phi.shift_sp <- lmer(phi ~ shift + sp + shift:sp + (1 | participant) + (1 | rotation), data = para_dt)
+summary(m.2r.phi.shift_sp)
+
+m.2r.phi.sa <- lmer(phi ~ sa + (1 | participant) + (1 | rotation), data = para_dt)
+summary(m.2r.phi.sa)
+m.2r.phi.sa_con <- lmer(phi ~ con + (1 | participant) + (1 | rotation), data = para_dt)
+summary(m.2r.phi.sa_con)
+m.2r.phi.sa_diff <- lmer(phi ~ diff + (1 | participant) + (1 | rotation), data = para_dt)
+summary(m.2r.phi.sa_diff)
+m.2r.phi.sa_eff <- lmer(phi ~ eff + (1 | participant) + (1 | rotation), data = para_dt)
+summary(m.2r.phi.sa_eff)
+m.2r.phi.sa_mot <- lmer(phi ~ mot + (1 | participant) + (1 | rotation), data = para_dt)
+summary(m.2r.phi.sa_mot)
+
+m.2r.phi.rxnt <- lmer(phi ~ avg_rxn_time + (1 | participant) + (1 | rotation), data = para_dt)
+summary(m.2r.phi.rxnt)
+
+#eta - learning rate
+m.2r.eta.shift <- lmer(eta ~ shift + (1 | participant) + (1 | rotation), data = para_dt)
+summary(m.2r.eta.shift)
+m.2r.eta.dn <- lmer(eta ~ d_n + (1 | participant) + (1 | rotation), data = para_dt)
+summary(m.2r.eta.dn)
+m.2r.eta.activity <- lmer(eta ~ activity + (1 | participant) + (1 | rotation), data = para_dt)
+summary(m.2r.eta.activity)
+m.2r.eta.shift_act <- lmer(eta ~ shift + activity + shift:activity + (1 | participant) + (1 | rotation), data = para_dt)
+summary(m.2r.eta.shift_act)
+
+m.2r.eta.kss <- lmer(eta ~ kss + (1 | participant) + (1 | rotation), data = para_dt)
+summary(m.2r.eta.kss)
+m.2r.eta.shift_kss <- lmer(eta ~ shift + kss + shift:kss + (1 | participant) + (1 | rotation), data = para_dt)
+summary(m.2r.eta.shift_kss)
+m.2r.eta.sp <- lmer(eta ~ sp + (1 | participant) + (1 | rotation), data = para_dt)
+summary(m.2r.eta.sp)
+m.2r.eta.shift_sp <- lmer(eta ~ shift + sp + shift:sp + (1 | participant) + (1 | rotation), data = para_dt)
+summary(m.2r.eta.shift_sp)
+
+m.2r.eta.sa <- lmer(eta ~ sa + (1 | participant) + (1 | rotation), data = para_dt)
+summary(m.2r.eta.sa)
+m.2r.eta.sa_con <- lmer(eta ~ con + (1 | participant) + (1 | rotation), data = para_dt)
+summary(m.2r.eta.sa_con)
+m.2r.eta.sa_diff <- lmer(eta ~ diff + (1 | participant) + (1 | rotation), data = para_dt)
+summary(m.2r.eta.sa_diff)
+m.2r.eta.sa_eff <- lmer(eta ~ eff + (1 | participant) + (1 | rotation), data = para_dt)
+summary(m.2r.eta.sa_eff)
+m.2r.eta.sa_mot <- lmer(eta ~ mot + (1 | participant) + (1 | rotation), data = para_dt)
+summary(m.2r.eta.sa_mot)
+
+m.2r.eta.rxnt <- lmer(eta ~ avg_rxn_time + (1 | participant) + (1 | rotation), data = para_dt)
+summary(m.2r.eta.rxnt)
+
+#gamma - risk propensity
+m.2r.gamma.shift <- lmer(gamma ~ shift + (1 | participant) + (1 | rotation), data = para_dt)
+summary(m.2r.gamma.shift)
+m.2r.gamma.dn <- lmer(gamma ~ d_n + (1 | participant) + (1 | rotation), data = para_dt)
+summary(m.2r.gamma.dn)
+m.2r.gamma.activity <- lmer(gamma ~ activity + (1 | participant) + (1 | rotation), data = para_dt)
+summary(m.2r.gamma.activity)
+m.2r.gamma.shift_act <- lmer(gamma ~ shift + activity + shift:activity + (1 | participant) + (1 | rotation), data = para_dt)
+summary(m.2r.gamma.shift_act)
+
+m.2r.gamma.kss <- lmer(gamma ~ kss + (1 | participant) + (1 | rotation), data = para_dt)
+summary(m.2r.gamma.kss)
+m.2r.gamma.shift_kss <- lmer(gamma ~ shift + kss + shift:kss + (1 | participant) + (1 | rotation), data = para_dt)
+summary(m.2r.gamma.shift_kss)
+m.2r.gamma.sp <- lmer(gamma ~ sp + (1 | participant) + (1 | rotation), data = para_dt)
+summary(m.2r.gamma.sp)
+m.2r.gamma.shift_sp <- lmer(gamma ~ shift + sp + shift:sp + (1 | participant) + (1 | rotation), data = para_dt)
+summary(m.2r.gamma.shift_sp)
+
+m.2r.gamma.sa <- lmer(gamma ~ sa + (1 | participant) + (1 | rotation), data = para_dt)
+summary(m.2r.gamma.sa)
+m.2r.gamma.sa_con <- lmer(gamma ~ con + (1 | participant) + (1 | rotation), data = para_dt)
+summary(m.2r.gamma.sa_con)
+m.2r.gamma.sa_diff <- lmer(gamma ~ diff + (1 | participant) + (1 | rotation), data = para_dt)
+summary(m.2r.gamma.sa_diff)
+m.2r.gamma.sa_eff <- lmer(gamma ~ eff + (1 | participant) + (1 | rotation), data = para_dt)
+summary(m.2r.gamma.sa_eff)
+m.2r.gamma.sa_mot <- lmer(gamma ~ mot + (1 | participant) + (1 | rotation), data = para_dt)
+summary(m.2r.gamma.sa_mot)
+
+m.2r.gamma.rxnt <- lmer(gamma ~ avg_rxn_time + (1 | participant) + (1 | rotation), data = para_dt)
+summary(m.2r.gamma.rxnt)
+
+#tau - behavioral consistency
+m.2r.tau.shift <- lmer(tau ~ shift + (1 | participant) + (1 | rotation), data = para_dt)
+summary(m.2r.tau.shift)
+m.2r.tau.dn <- lmer(tau ~ d_n + (1 | participant) + (1 | rotation), data = para_dt)
+summary(m.2r.tau.dn)
+m.2r.tau.activity <- lmer(tau ~ activity + (1 | participant) + (1 | rotation), data = para_dt)
+summary(m.2r.tau.activity)
+m.2r.tau.shift_act <- lmer(tau ~ shift + activity + shift:activity + (1 | participant) + (1 | rotation), data = para_dt)
+summary(m.2r.tau.shift_act)
+
+m.2r.tau.kss <- lmer(tau ~ kss + (1 | participant) + (1 | rotation), data = para_dt)
+summary(m.2r.tau.kss)
+m.2r.tau.shift_kss <- lmer(tau ~ shift + kss + shift:kss + (1 | participant) + (1 | rotation), data = para_dt)
+summary(m.2r.tau.shift_kss)
+m.2r.tau.sp <- lmer(tau ~ sp + (1 | participant) + (1 | rotation), data = para_dt)
+summary(m.2r.tau.sp)
+m.2r.tau.shift_sp <- lmer(tau ~ shift + sp + shift:sp + (1 | participant) + (1 | rotation), data = para_dt)
+summary(m.2r.tau.shift_sp)
+
+m.2r.tau.sa <- lmer(tau ~ sa + (1 | participant) + (1 | rotation), data = para_dt)
+summary(m.2r.tau.sa)
+m.2r.tau.sa_con <- lmer(tau ~ con + (1 | participant) + (1 | rotation), data = para_dt)
+summary(m.2r.tau.sa_con)
+m.2r.tau.sa_diff <- lmer(tau ~ diff + (1 | participant) + (1 | rotation), data = para_dt)
+summary(m.2r.tau.sa_diff)
+m.2r.tau.sa_eff <- lmer(tau ~ eff + (1 | participant) + (1 | rotation), data = para_dt)
+summary(m.2r.tau.sa_eff)
+m.2r.tau.sa_mot <- lmer(tau ~ mot + (1 | participant) + (1 | rotation), data = para_dt)
+summary(m.2r.tau.sa_mot)
+
+m.2r.tau.rxnt <- lmer(tau ~ avg_rxn_time + (1 | participant) + (1 | rotation), data = para_dt)
+summary(m.2r.tau.rxnt)
+
+###################################
+###################################
+###################################
+
+#LMM - rotation as an random intercept and no extreme values
+#phi - prior belief of success
+m.noev2r.phi.shift <- lmer(phi ~ shift + (1 | participant) + (1 | rotation), data = para_noev_dt)
+summary(m.noev2r.phi.shift)
+m.noev2r.phi.dn <- lmer(phi ~ d_n + (1 | participant) + (1 | rotation), data = para_noev_dt)
+summary(m.noev2r.phi.dn)
+m.noev2r.phi.activity <- lmer(phi ~ activity + (1 | participant) + (1 | rotation), data = para_noev_dt)
+summary(m.noev2r.phi.activity)
+m.noev2r.phi.shift_act <- lmer(phi ~ shift + activity + shift:activity + (1 | participant) + (1 | rotation), data = para_noev_dt)
+summary(m.noev2r.phi.shift_act)
+
+m.noev2r.phi.kss <- lmer(phi ~ kss + (1 | participant) + (1 | rotation), data = para_noev_dt)
+summary(m.noev2r.phi.kss)
+m.noev2r.phi.shift_kss <- lmer(phi ~ shift + kss + shift:kss + (1 | participant) + (1 | rotation), data = para_noev_dt)
+summary(m.noev2r.phi.shift_kss)
+m.noev2r.phi.sp <- lmer(phi ~ sp + (1 | participant) + (1 | rotation), data = para_noev_dt)
+summary(m.noev2r.phi.sp)
+m.noev2r.phi.shift_sp <- lmer(phi ~ shift + sp + shift:sp + (1 | participant) + (1 | rotation), data = para_noev_dt)
+summary(m.noev2r.phi.shift_sp)
+
+m.noev2r.phi.sa <- lmer(phi ~ sa + (1 | participant) + (1 | rotation), data = para_noev_dt)
+summary(m.noev2r.phi.sa)
+m.noev2r.phi.sa_con <- lmer(phi ~ con + (1 | participant) + (1 | rotation), data = para_noev_dt)
+summary(m.noev2r.phi.sa_con)
+m.noev2r.phi.sa_diff <- lmer(phi ~ diff + (1 | participant) + (1 | rotation), data = para_noev_dt)
+summary(m.noev2r.phi.sa_diff)
+m.noev2r.phi.sa_eff <- lmer(phi ~ eff + (1 | participant) + (1 | rotation), data = para_noev_dt)
+summary(m.noev2r.phi.sa_eff)
+m.noev2r.phi.sa_mot <- lmer(phi ~ mot + (1 | participant) + (1 | rotation), data = para_noev_dt)
+summary(m.noev2r.phi.sa_mot)
+
+m.noev2r.phi.rxnt <- lmer(phi ~ avg_rxn_time + (1 | participant) + (1 | rotation), data = para_noev_dt)
+summary(m.noev2r.phi.rxnt)
+
+#eta - learning rate
+m.noev2r.eta.shift <- lmer(eta ~ shift + (1 | participant) + (1 | rotation), data = para_noev_dt)
+summary(m.noev2r.eta.shift)
+m.noev2r.eta.dn <- lmer(eta ~ d_n + (1 | participant) + (1 | rotation), data = para_noev_dt)
+summary(m.noev2r.eta.dn)
+m.noev2r.eta.activity <- lmer(eta ~ activity + (1 | participant) + (1 | rotation), data = para_noev_dt)
+summary(m.noev2r.eta.activity)
+m.noev2r.eta.shift_act <- lmer(eta ~ shift + activity + shift:activity + (1 | participant) + (1 | rotation), data = para_noev_dt)
+summary(m.noev2r.eta.shift_act)
+
+m.noev2r.eta.kss <- lmer(eta ~ kss + (1 | participant) + (1 | rotation), data = para_noev_dt)
+summary(m.noev2r.eta.kss)
+m.noev2r.eta.shift_kss <- lmer(eta ~ shift + kss + shift:kss + (1 | participant) + (1 | rotation), data = para_noev_dt)
+summary(m.noev2r.eta.shift_kss)
+m.noev2r.eta.sp <- lmer(eta ~ sp + (1 | participant) + (1 | rotation), data = para_noev_dt)
+summary(m.noev2r.eta.sp)
+m.noev2r.eta.shift_sp <- lmer(eta ~ shift + sp + shift:sp + (1 | participant) + (1 | rotation), data = para_noev_dt)
+summary(m.noev2r.eta.shift_sp)
+
+m.noev2r.eta.sa <- lmer(eta ~ sa + (1 | participant) + (1 | rotation), data = para_noev_dt)
+summary(m.noev2r.eta.sa)
+m.noev2r.eta.sa_con <- lmer(eta ~ con + (1 | participant) + (1 | rotation), data = para_noev_dt)
+summary(m.noev2r.eta.sa_con)
+m.noev2r.eta.sa_diff <- lmer(eta ~ diff + (1 | participant) + (1 | rotation), data = para_noev_dt)
+summary(m.noev2r.eta.sa_diff)
+m.noev2r.eta.sa_eff <- lmer(eta ~ eff + (1 | participant) + (1 | rotation), data = para_noev_dt)
+summary(m.noev2r.eta.sa_eff)
+m.noev2r.eta.sa_mot <- lmer(eta ~ mot + (1 | participant) + (1 | rotation), data = para_noev_dt)
+summary(m.noev2r.eta.sa_mot)
+
+m.noev2r.eta.rxnt <- lmer(eta ~ avg_rxn_time + (1 | participant) + (1 | rotation), data = para_noev_dt)
+summary(m.noev2r.eta.rxnt)
+
+#gamma - risk propensity
+m.noev2r.gamma.shift <- lmer(gamma ~ shift + (1 | participant) + (1 | rotation), data = para_noev_dt)
+summary(m.noev2r.gamma.shift)
+m.noev2r.gamma.dn <- lmer(gamma ~ d_n + (1 | participant) + (1 | rotation), data = para_noev_dt)
+summary(m.noev2r.gamma.dn)
+m.noev2r.gamma.activity <- lmer(gamma ~ activity + (1 | participant) + (1 | rotation), data = para_noev_dt)
+summary(m.noev2r.gamma.activity)
+m.noev2r.gamma.shift_act <- lmer(gamma ~ shift + activity + shift:activity + (1 | participant) + (1 | rotation), data = para_noev_dt)
+summary(m.noev2r.gamma.shift_act)
+
+m.noev2r.gamma.kss <- lmer(gamma ~ kss + (1 | participant) + (1 | rotation), data = para_noev_dt)
+summary(m.noev2r.gamma.kss)
+m.noev2r.gamma.shift_kss <- lmer(gamma ~ shift + kss + shift:kss + (1 | participant) + (1 | rotation), data = para_noev_dt)
+summary(m.noev2r.gamma.shift_kss)
+m.noev2r.gamma.sp <- lmer(gamma ~ sp + (1 | participant) + (1 | rotation), data = para_noev_dt)
+summary(m.noev2r.gamma.sp)
+m.noev2r.gamma.shift_sp <- lmer(gamma ~ shift + sp + shift:sp + (1 | participant) + (1 | rotation), data = para_noev_dt)
+summary(m.noev2r.gamma.shift_sp)
+
+m.noev2r.gamma.sa <- lmer(gamma ~ sa + (1 | participant) + (1 | rotation), data = para_noev_dt)
+summary(m.noev2r.gamma.sa)
+m.noev2r.gamma.sa_con <- lmer(gamma ~ con + (1 | participant) + (1 | rotation), data = para_noev_dt)
+summary(m.noev2r.gamma.sa_con)
+m.noev2r.gamma.sa_diff <- lmer(gamma ~ diff + (1 | participant) + (1 | rotation), data = para_noev_dt)
+summary(m.noev2r.gamma.sa_diff)
+m.noev2r.gamma.sa_eff <- lmer(gamma ~ eff + (1 | participant) + (1 | rotation), data = para_noev_dt)
+summary(m.noev2r.gamma.sa_eff)
+m.noev2r.gamma.sa_mot <- lmer(gamma ~ mot + (1 | participant) + (1 | rotation), data = para_noev_dt)
+summary(m.noev2r.gamma.sa_mot)
+
+m.noev2r.gamma.rxnt <- lmer(gamma ~ avg_rxn_time + (1 | participant) + (1 | rotation), data = para_noev_dt)
+summary(m.noev2r.gamma.rxnt)
+
+#tau - behavioral consistency
+m.noev2r.tau.shift <- lmer(tau ~ shift + (1 | participant) + (1 | rotation), data = para_noev_dt)
+summary(m.noev2r.tau.shift)
+m.noev2r.tau.dn <- lmer(tau ~ d_n + (1 | participant) + (1 | rotation), data = para_noev_dt)
+summary(m.noev2r.tau.dn)
+m.noev2r.tau.activity <- lmer(tau ~ activity + (1 | participant) + (1 | rotation), data = para_noev_dt)
+summary(m.noev2r.tau.activity)
+m.noev2r.tau.shift_act <- lmer(tau ~ shift + activity + shift:activity + (1 | participant) + (1 | rotation), data = para_noev_dt)
+summary(m.noev2r.tau.shift_act)
+
+m.noev2r.tau.kss <- lmer(tau ~ kss + (1 | participant) + (1 | rotation), data = para_noev_dt)
+summary(m.noev2r.tau.kss)
+m.noev2r.tau.shift_kss <- lmer(tau ~ shift + kss + shift:kss + (1 | participant) + (1 | rotation), data = para_noev_dt)
+summary(m.noev2r.tau.shift_kss)
+m.noev2r.tau.sp <- lmer(tau ~ sp + (1 | participant) + (1 | rotation), data = para_noev_dt)
+summary(m.noev2r.tau.sp)
+m.noev2r.tau.shift_sp <- lmer(tau ~ shift + sp + shift:sp + (1 | participant) + (1 | rotation), data = para_noev_dt)
+summary(m.noev2r.tau.shift_sp)
+
+m.noev2r.tau.sa <- lmer(tau ~ sa + (1 | participant) + (1 | rotation), data = para_noev_dt)
+summary(m.noev2r.tau.sa)
+m.noev2r.tau.sa_con <- lmer(tau ~ con + (1 | participant) + (1 | rotation), data = para_noev_dt)
+summary(m.noev2r.tau.sa_con)
+m.noev2r.tau.sa_diff <- lmer(tau ~ diff + (1 | participant) + (1 | rotation), data = para_noev_dt)
+summary(m.noev2r.tau.sa_diff)
+m.noev2r.tau.sa_eff <- lmer(tau ~ eff + (1 | participant) + (1 | rotation), data = para_noev_dt)
+summary(m.noev2r.tau.sa_eff)
+m.noev2r.tau.sa_mot <- lmer(tau ~ mot + (1 | participant) + (1 | rotation), data = para_noev_dt)
+summary(m.noev2r.tau.sa_mot)
+
+m.noev2r.tau.rxnt <- lmer(tau ~ avg_rxn_time + (1 | participant) + (1 | rotation), data = para_noev_dt)
+summary(m.noev2r.tau.rxnt)
+
