@@ -220,6 +220,65 @@ tau.shift_activity.plot <- ggplot(para_dt, aes(x = shift_activity, y = tau, grou
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
+#####pairwise tests to learn more about CI/CC/I
+
+#kruskal test for non-normal groups with unequal variance -> significantly different
+kruskal.test(isi_score ~ consistency, data = para_dt)
+
+#show which groups are significant from each other
+pairwise.wilcox.test(para_dt$age, para_dt$consistency,
+                     p.adjust.method = "bonferroni")
+
+pairwise.wilcox.test(para_dt$isi_score, para_dt$consistency,
+                     p.adjust.method = "bonferroni")
+
+pairwise.wilcox.test(para_dt$first_score, para_dt$consistency,
+                     p.adjust.method = "bonferroni")
+
+pairwise.wilcox.test(para_dt$bai_score, para_dt$consistency,
+                     p.adjust.method = "bonferroni")
+
+pairwise.wilcox.test(para_dt$phq9_score, para_dt$consistency,
+                     p.adjust.method = "bonferroni")
+
+pairwise.wilcox.test(para_dt$swd_score, para_dt$consistency,
+                     p.adjust.method = "bonferroni")
+
+pairwise.wilcox.test(para_dt$cbi_personal, para_dt$consistency,
+                     p.adjust.method = "bonferroni")
+
+pairwise.wilcox.test(para_dt$cbi_work, para_dt$consistency,
+                     p.adjust.method = "bonferroni")
+
+pairwise.wilcox.test(para_dt$cbi_client, para_dt$consistency,
+                     p.adjust.method = "bonferroni")
+
+pairwise.wilcox.test(para_dt$cbi_total, para_dt$consistency,
+                     p.adjust.method = "bonferroni")
+
+pairwise.wilcox.test(para_dt$audit_score, para_dt$consistency,
+                     p.adjust.method = "bonferroni")
+
+pairwise.wilcox.test(para_dt$pcl_total_score, para_dt$consistency,
+                     p.adjust.method = "bonferroni")
+
+pairwise.wilcox.test(para_dt$ace_score, para_dt$consistency,
+                     p.adjust.method = "bonferroni")
+
+pairwise.wilcox.test(para_dt$emscsq_op, para_dt$consistency,
+                     p.adjust.method = "bonferroni")
+
+pairwise.wilcox.test(para_dt$emscsq_org, para_dt$consistency,
+                     p.adjust.method = "bonferroni")
+
+pairwise.wilcox.test(para_dt$emscsq_total, para_dt$consistency,
+                     p.adjust.method = "bonferroni")
+
+para_dt[, .(mean_months_experience = mean(months_experience, na.rm = TRUE)), by = consistency]
+
+pairwise.wilcox.test(para_dt$months_experience, para_dt$consistency,
+                     p.adjust.method = "bonferroni")
+
 ########LMM##########
 #LMM - consistency as predictor
 m.phi.consistency <- lmer(phi ~ consistency + (1 | participant), data = para_dt)
