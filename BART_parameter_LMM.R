@@ -280,6 +280,18 @@ pairwise.wilcox.test(para_dt$months_experience, para_dt$consistency,
                      p.adjust.method = "bonferroni")
 
 ########LMM##########
+#LMM - figuring out which traits/MH markers are connected to tau
+
+m.tau.cbi_personal <- lmer(tau ~ cbi_personal + (1 | participant), data = para_dt_no7)
+summary(m.tau.cbi_personal)
+
+m.tau.audit_score <- lmer(tau ~ audit_score + (1 | participant), data = para_dt_no7)
+summary(m.tau.audit_score)
+
+m.tau.swd_score <- lmer(tau ~ swd_score + (1 | participant), data = para_dt_no7)
+summary(m.tau.swd_score)
+
+
 #LMM - consistency as predictor
 m.phi.consistency <- lmer(phi ~ consistency + (1 | participant), data = para_dt)
 summary(m.phi.consistency)
