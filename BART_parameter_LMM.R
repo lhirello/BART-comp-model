@@ -92,7 +92,6 @@ sp_sim_dt <- as.data.table(read_excel("sp_sim_dt.xlsx"))
 wide_sa_sim_dt <- as.data.table(read_excel("wide_sa_sim_dt.xlsx"))
 pvt_dt <- as.data.table(read_excel("pvt_dt.xlsx"))
 
-#tomorrow need to write the code to load the files these came from so they still work
 para_dt[kss_sim_dt, on = .(trial_ID = trial_ID_mod), kss := i.kss]
 para_dt[sp_sim_dt, on = .(trial_ID = trial_ID_mod), sp := i.sp]
 para_dt[wide_sa_sim_dt, on = .(trial_ID = trial_ID), `:=`(
