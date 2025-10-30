@@ -218,6 +218,45 @@ tau.shift_activity.plot <- ggplot(para_dt, aes(x = shift_activity, y = tau, grou
   ) +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
+print(tau.shift_activity.plot)
+
+
+tau.participant.violin_plot <- ggplot(para_dt, aes(x = participant, y = tau)) +
+  geom_violin(trim = FALSE, fill = "lightblue", color = "grey40") +
+  geom_boxplot(width = 0.3, outlier.shape = NA) +
+  labs(x = "Participant", y = "Tau") +
+  coord_cartesian(ylim = c(0, 10)) +
+  theme_minimal() +
+  theme(axis.text.x = element_blank(),
+        axis.ticks.x = element_blank())
+
+ggsave(
+  plot = tau.participant.violin_plot,
+  filename = "plots/tau.participant.violin_plot.png",
+  bg = "transparent",
+  width = 7,
+  height = 7,
+  units = "in",
+  dpi = 300
+)
+
+#shows each participants tau distribution
+ggplot(para_dt, aes(x = shift_activity, y = tau, group = participant, color = participant)) +
+  geom_line() +
+  geom_point() +
+  facet_wrap(~ participant, ncol = 4) +
+  labs(
+    x = "Shift and Activity",
+    y = "Tau",
+    title = "Within-Participant Changes in Tau Across Shifts and Activities"
+  ) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    legend.position = "none"
+  )
+
+
 
 #####pairwise tests to learn more about CI/CC/I
 
