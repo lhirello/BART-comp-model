@@ -226,9 +226,10 @@ tau.participant.violin_plot <- ggplot(para_dt, aes(x = participant, y = tau)) +
   geom_boxplot(width = 0.3, outlier.shape = NA) +
   labs(x = "Participant", y = "Tau") +
   coord_cartesian(ylim = c(0, 10)) +
-  theme_minimal() +
+  theme_classic() +
   theme(axis.text.x = element_blank(),
-        axis.ticks.x = element_blank())
+        axis.ticks.x = element_blank(), axis.title = element_text(size = 17), axis.text = element_text(size = 15), axis.line = element_line(linewidth = 0.8))
+print(tau.participant.violin_plot)
 
 ggsave(
   plot = tau.participant.violin_plot,
