@@ -242,7 +242,7 @@ ggsave(
 )
 
 #shows each participants tau distribution
-ggplot(para_dt, aes(x = shift_activity, y = tau, group = participant, color = participant)) +
+tau.within_participant.plot <- ggplot(para_dt, aes(x = shift_activity, y = tau, group = participant, color = participant)) +
   geom_line() +
   geom_point() +
   facet_wrap(~ participant, ncol = 4) +
@@ -256,7 +256,17 @@ ggplot(para_dt, aes(x = shift_activity, y = tau, group = participant, color = pa
     axis.text.x = element_text(angle = 45, hjust = 1),
     legend.position = "none"
   )
+print(tau.within_participant.plot)
 
+ggsave(
+  plot = tau.within_participant.plot,
+  filename = "plots/tau.within_participant.plot.png",
+  bg = "transparent",
+  width = 7,
+  height = 7,
+  units = "in",
+  dpi = 300
+)
 
 
 #####pairwise tests to learn more about CI/CC/I
