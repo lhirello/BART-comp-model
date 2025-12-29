@@ -69,6 +69,14 @@ para_dt <- para_dt %>%
     TRUE ~ NA_character_
   ))
 
+para_dt <- para_dt %>%
+  mutate(consistency_detail = case_when(
+    consistency == "CI" ~ "CI",
+    consistency == "CC" ~ "CC",
+    participant == "01" | participant == "02" | participant == "04" | participant == "14" ~ "SI",
+    participant == "05" | participant == "13" | participant == "15" ~ "TI",
+    TRUE ~ NA_character_
+  ))
 
 para_dt$participant <- factor(para_dt$participant,
                             levels = c("01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12", "13", "14", "15", "16"))
@@ -165,6 +173,9 @@ mean(para_dt$tau)
 sd(para_dt$tau)
 
 #calculate ICCs
+iccMixed("phi", id = "participant", data = para_dt) #Icc = variance, sigma = SD
+iccMixed("eta", id = "participant", data = para_dt) #Icc = variance, sigma = SD
+iccMixed("gamma", id = "participant", data = para_dt) #Icc = variance, sigma = SD
 iccMixed("tau", id = "participant", data = para_dt) #Icc = variance, sigma = SD
 
 para_dt[, c("Btau", "Wtau") := meanDeviations(tau), by = participant]
@@ -184,6 +195,27 @@ plot(testDistribution(para_dt.noevb$Btau, extremevalues = "theoretical", ev.perc
 
 #re-make full data set without any extreme values (no participant 7, 13N22, 13D22, 01D11, 02N11, 04D22, 14N22)
 para_noev_dt <- para_dt.noev[participant != "07"]
+para_dt_no7 <- para_dt[participant != "07"]
+
+#calc ICC by consistency
+para_dt_no7[, iccMixed("tau", id = "participant", data = .SD), by = "consistency"]
+para_dt_no7[, iccMixed("tau", id = "participant", data = .SD), by = "consistency_detail"]
+
+#graphing ICC
+icc_dt <- para_dt_no7[, iccMixed("tau", id = "participant", data = .SD), by = "consistency"]
+icc_dt[, Var := factor(Var, levels = c("participant", "Residual"))]
+icc_dt[, prop := Sigma / sum(Sigma),by = consistency]
+ggplot(icc_dt, aes(x = consistency, y = prop, fill = Var)) +
+  geom_col(width = 0.6, colour = "black") +
+  scale_fill_manual(values = c(participant = "grey80", Residual = "grey40")) +
+  scale_y_continuous(labels = scales::percent_format(), limits = c(0, 1)) +
+  labs(
+    x = "Consistency condition",
+    y = "Proportion of variance in τ",
+    fill = "Variance source"
+  ) +
+  theme_classic()
+
 
 #calculate tau means and sds for each group
 para_dt[consistency == "CC", .(mean_tauCC = mean(tau, na.rm = TRUE))]
@@ -194,6 +226,17 @@ para_dt[consistency == "I", .(mean_tauI = mean(tau, na.rm = TRUE))]
 para_dt[consistency == "CC", .(sd_tauCC = sd(tau, na.rm = TRUE))]
 para_dt[consistency == "CI", .(sd_tauIC = sd(tau, na.rm = TRUE))]
 para_dt[consistency == "I", .(sd_tauI = sd(tau, na.rm = TRUE))]
+
+#calc tau stats by participant
+para_dt[
+  , .(
+    mean_tau = mean(tau, na.rm = TRUE),
+    sd_tau = sd(tau, na.rm = TRUE),
+    median_tau = median(tau, na.rm = TRUE),
+    IQR_tau = IQR(tau, na.rm = TRUE)
+  ),
+  by = participant
+]
 
 #ANOVA to see if group means are sig different (they are)
 anova.tau.consistency <- aov(tau ~ consistency, data = para_dt)
@@ -220,20 +263,36 @@ tau.shift_activity.plot <- ggplot(para_dt, aes(x = shift_activity, y = tau, grou
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 print(tau.shift_activity.plot)
 
-
 tau.participant.violin_plot <- ggplot(para_dt, aes(x = participant, y = tau)) +
-  geom_violin(trim = FALSE, fill = "lightblue", color = "grey40") +
-  geom_boxplot(width = 0.3, outlier.shape = NA) +
+  geom_violin(trim = FALSE, fill = "red", color = "black") +
+  #geom_boxplot(width = 0.3, outlier.shape = NA) +
   labs(x = "Participant", y = "Tau") +
   coord_cartesian(ylim = c(0, 10)) +
   theme_classic() +
   theme(axis.text.x = element_blank(),
         axis.ticks.x = element_blank(), axis.title = element_text(size = 17), axis.text = element_text(size = 15), axis.line = element_line(linewidth = 0.8))
-print(tau.participant.violin_plot)
+tau.participant.violin_plot
+
+tau.participant.violin_box_plot <- ggplot(para_dt, aes(x = participant, y = tau)) +
+  geom_violin(trim = FALSE, scale = "width", width = 0.4, fill = "lightgrey", color = "black") +
+  geom_boxplot(width = 0.2, outlier.shape = NA) +
+  stat_summary(
+    fun = mean,
+    geom = "point",
+    shape = 16,        # solid circle
+    size = 1.5,
+    colour = "blue"
+  ) +
+  labs(x = "Participant", y = "Tau") +
+  coord_cartesian(ylim = c(0, 10)) +
+  theme_classic() +
+  theme(axis.text.x = element_blank(),
+        axis.ticks.x = element_blank(), axis.title = element_text(size = 17), axis.text = element_text(size = 15), axis.line = element_line(linewidth = 0.8))
+print(tau.participant.violin_box_plot)
 
 ggsave(
-  plot = tau.participant.violin_plot,
-  filename = "plots/tau.participant.violin_plot.png",
+  plot = tau.participant.violin_box_plot,
+  filename = "plots/tau.participant.violin_box_plot.png",
   bg = "transparent",
   width = 7,
   height = 7,
