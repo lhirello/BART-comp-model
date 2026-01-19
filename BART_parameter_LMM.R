@@ -351,10 +351,10 @@ tau_full_dt
 tau_full.desc_stats.plot <- ggplot(tau_full_dt, aes(x = consistency_detail, y = mean_tau)) +
   geom_point(size = 3) +
   geom_errorbar(aes(ymin = mean_tau - sd_tau,  ymax = mean_tau + sd_tau), width = 0.15, linewidth = 0.8) +
-  coord_cartesian(ylim = c(0, 10)) +
+  #coord_cartesian(ylim = c(0, 10)) +
   scale_x_discrete(labels = c("CC" = "OP", "CI" = "ID", "SI"  = "SI", "TI" = "TI")) +
   labs( x = "Phenotype", y = "Mean tau") +
-  theme_pubr() +
+  #theme_pubr() +
   theme_classic() +
   theme(aspect.ratio = 0.8, axis.title = element_text(size = 20), axis.text = element_text(size = 18), axis.line = element_line(linewidth = 1), legend.text = element_text(size = 13), legend.title = element_text(size = 13))
 tau_full.desc_stats.plot
