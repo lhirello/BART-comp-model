@@ -165,7 +165,7 @@ para_dt$sex <- factor(para_dt$sex,
 para_dt$service <- factor(para_dt$service,
                       levels = c("NT", "VIC", "WA", "QLD", "ACT"))
 
-write_xlsx(para_dt, "para_dt.xlsx")
+#write_xlsx(para_dt, "para_dt.xlsx")
 
 
 #overall mean & SD
@@ -326,6 +326,41 @@ ggsave(
   units = "in",
   dpi = 300
 )
+
+##exploration of 4 phenotypes instead of 3
+#phenotype exploration
+para_dt[, .(mean_tau = mean(tau, na.rm = TRUE)), by = consistency_detail]
+para_dt[, .(SD_tau = SD(tau, na.rm = TRUE)), by = consistency_detail]
+
+#ANOVA to see if group means are sig different (they are)
+anova.tau.con_detail <- aov(tau ~ consistency_detail, data = para_dt)
+summary(anova.tau.con_detail)
+
+#kruskal test for non-normal groups with unequal variance -> significantly different
+kruskal.test(tau ~ consistency_detail, data = para_dt)
+
+#show which groups are significant from each other -> they all are
+pairwise.wilcox.test(para_dt$tau, para_dt$consistency_detail,
+                     p.adjust.method = "bonferroni")
+
+# para_dt[, iccMixed("tau", id = "participant", data = .SD), by = "consistency_detail"]
+
+tau_full_dt <- para_dt[, .(mean_tau = mean(tau, na.rm = TRUE), sd_tau = sd(tau, na.rm = TRUE), n = sum(!is.na(tau))), by = consistency_detail]
+tau_full_dt
+
+tau_full.desc_stats.plot <- ggplot(tau_full_dt, aes(x = consistency_detail, y = mean_tau)) +
+  geom_point(size = 3) +
+  geom_errorbar(aes(ymin = mean_tau - sd_tau,  ymax = mean_tau + sd_tau), width = 0.15, linewidth = 0.8) +
+  coord_cartesian(ylim = c(0, 10)) +
+  scale_x_discrete(labels = c("CC" = "OP", "CI" = "ID", "SI"  = "SI", "TI" = "TI")) +
+  labs( x = "Phenotype", y = "Mean tau") +
+  theme_pubr() +
+  theme_classic() +
+  theme(aspect.ratio = 0.8, axis.title = element_text(size = 20), axis.text = element_text(size = 18), axis.line = element_line(linewidth = 1), legend.text = element_text(size = 13), legend.title = element_text(size = 13))
+tau_full.desc_stats.plot
+ggsave(plot = tau_full.desc_stats.plot, filename = "plots/tau_full.desc_stats.plot.png", bg = "transparent", width = 7, height = 7, units = "in", dpi = 300)
+
+
 
 
 #####pairwise tests to learn more about CI/CC/I
