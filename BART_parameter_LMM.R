@@ -248,9 +248,9 @@ kruskal.test(tau ~ consistency, data = para_dt)
 #show which groups are significant from each other -> they all are
 pairwise.wilcox.test(para_dt$tau, para_dt$consistency,
                      p.adjust.method = "bonferroni")
-#graph of strange tau patterns
-para_dt[, shift_activity := paste(shift, activity, sep = "_")]
 
+para_dt[, shift_activity := paste(shift, activity, sep = "_")]
+#graph of strange tau patterns
 tau.shift_activity.plot <- ggplot(para_dt, aes(x = shift_activity, y = tau, group = participant, color = participant)) +
   geom_line() +
   geom_point() +
@@ -276,18 +276,12 @@ tau.participant.violin_plot
 tau.participant.violin_box_plot <- ggplot(para_dt, aes(x = participant, y = tau)) +
   geom_violin(trim = FALSE, scale = "width", width = 0.4, fill = "lightgrey", color = "black") +
   geom_boxplot(width = 0.2, outlier.shape = NA) +
-  stat_summary(
-    fun = mean,
-    geom = "point",
-    shape = 16,        # solid circle
-    size = 1.5,
-    colour = "blue"
-  ) +
+  stat_summary(fun = mean, geom = "point", shape = 16, size = 1.5, colour = "#FF11A0") +
   labs(x = "Participant", y = "Tau") +
   coord_cartesian(ylim = c(0, 10)) +
   theme_classic() +
-  theme(axis.text.x = element_blank(),
-        axis.ticks.x = element_blank(), axis.title = element_text(size = 17), axis.text = element_text(size = 15), axis.line = element_line(linewidth = 0.8))
+  theme(aspect.ratio = 0.8, 
+    axis.text.x = element_blank(), axis.ticks.x = element_blank(), axis.title = element_text(size = 20), axis.text = element_text(size = 18), axis.line = element_line(linewidth = 1))
 print(tau.participant.violin_box_plot)
 
 ggsave(
@@ -330,7 +324,7 @@ ggsave(
 ##exploration of 4 phenotypes instead of 3
 #phenotype exploration
 para_dt[, .(mean_tau = mean(tau, na.rm = TRUE)), by = consistency_detail]
-para_dt[, .(SD_tau = SD(tau, na.rm = TRUE)), by = consistency_detail]
+para_dt[, .(sd_tau = sd(tau, na.rm = TRUE)), by = consistency_detail]
 
 #ANOVA to see if group means are sig different (they are)
 anova.tau.con_detail <- aov(tau ~ consistency_detail, data = para_dt)
