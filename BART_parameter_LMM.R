@@ -277,7 +277,7 @@ tau.participant.violin_box_plot <- ggplot(para_dt, aes(x = participant, y = tau)
   geom_violin(trim = FALSE, scale = "width", width = 0.4, fill = "lightgrey", color = "black") +
   geom_boxplot(width = 0.2, outlier.shape = NA) +
   stat_summary(fun = mean, geom = "point", shape = 16, size = 1.5, colour = "#FF11A0") +
-  labs(x = "Participant", y = "Tau") +
+  labs(x = "Participant", y = expression(tau) )+
   coord_cartesian(ylim = c(0, 10)) +
   theme_classic() +
   theme(aspect.ratio = 0.8, 
@@ -347,7 +347,7 @@ tau_full.desc_stats.plot <- ggplot(tau_full_dt, aes(x = consistency_detail, y = 
   geom_errorbar(aes(ymin = mean_tau - sd_tau,  ymax = mean_tau + sd_tau), width = 0.15, linewidth = 0.8) +
   #coord_cartesian(ylim = c(0, 10)) +
   scale_x_discrete(labels = c("CC" = "OP", "CI" = "ID", "SI"  = "SI", "TI" = "TI")) +
-  labs( x = "Phenotype", y = "Mean tau") +
+  labs( x = "Phenotype", y = expression(Mean ~ tau)) +
   #theme_pubr() +
   theme_classic() +
   theme(aspect.ratio = 0.8, axis.title = element_text(size = 20), axis.text = element_text(size = 18), axis.line = element_line(linewidth = 1), legend.text = element_text(size = 13), legend.title = element_text(size = 13))
